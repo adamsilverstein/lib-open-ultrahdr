@@ -36,25 +36,47 @@ import type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptio
 
 import { defaultEncodeOptions } from './types';
 
+// WASM class types (these are actual classes from the generated WASM bindings)
+interface WasmUltraHdrEncodeOptions {
+	baseQuality: number;
+	gainMapQuality: number;
+	targetHdrCapacity: number;
+	includeIsoMetadata: boolean;
+	includeUltrahdrV1: boolean;
+	gainMapScale: number;
+}
+
+interface WasmGainMapMetadata {
+	version: string;
+	baseRenditionIsHdr: boolean;
+	gainMapMin: number[];
+	gainMapMax: number[];
+	gamma: number[];
+	offsetSdr: number[];
+	offsetHdr: number[];
+	hdrCapacityMin: number;
+	hdrCapacityMax: number;
+}
+
 // WASM module type (these come from the generated WASM bindings)
 interface UltraHdrWasmModule {
-	default: (moduleOrPath?: string | URL | Response) => Promise<unknown>;
+	default: (moduleOrPath?: string | URL | Response | BufferSource) => Promise<unknown>;
 	isUltraHdr: (buffer: Uint8Array) => boolean;
 	decodeUltraHdr: (buffer: Uint8Array) => UltraHdrDecodeResult;
 	encodeUltraHdr: (
 		sdrBuffer: Uint8Array,
 		hdrBuffer: Float32Array,
-		options: UltraHdrEncodeOptions
+		options: WasmUltraHdrEncodeOptions
 	) => Uint8Array;
 	extractSdrBase: (buffer: Uint8Array) => Uint8Array;
-	getMetadata: (buffer: Uint8Array) => GainMapMetadata;
-	createDefaultOptions: () => UltraHdrEncodeOptions;
-	createHighQualityOptions: () => UltraHdrEncodeOptions;
-	createSmallSizeOptions: () => UltraHdrEncodeOptions;
-	createDefaultMetadata: () => GainMapMetadata;
-	validateMetadata: (metadata: GainMapMetadata) => boolean;
-	estimateHdrHeadroom: (metadata: GainMapMetadata) => number;
-	isMeaningfulHdr: (metadata: GainMapMetadata) => boolean;
+	getMetadata: (buffer: Uint8Array) => WasmGainMapMetadata;
+	createDefaultOptions: () => WasmUltraHdrEncodeOptions;
+	createHighQualityOptions: () => WasmUltraHdrEncodeOptions;
+	createSmallSizeOptions: () => WasmUltraHdrEncodeOptions;
+	createDefaultMetadata: () => WasmGainMapMetadata;
+	validateMetadata: (metadata: WasmGainMapMetadata) => boolean;
+	estimateHdrHeadroom: (metadata: WasmGainMapMetadata) => number;
+	isMeaningfulHdr: (metadata: WasmGainMapMetadata) => boolean;
 }
 
 /**
@@ -89,6 +111,39 @@ let initPromise: Promise<UltraHdrWasmModule> | null = null;
  */
 export function setLocation(newLocation: string): void {
 	location = newLocation;
+}
+
+/**
+ * Checks if metadata is a WASM class instance (has __wbg_ptr property).
+ */
+function isWasmMetadataInstance(metadata: unknown): boolean {
+	return typeof metadata === 'object' && metadata !== null && '__wbg_ptr' in metadata;
+}
+
+/**
+ * Converts a plain metadata object to a WASM class instance.
+ */
+async function toWasmMetadata(metadata: GainMapMetadata): Promise<WasmGainMapMetadata> {
+	// If it's already a WASM instance, return as-is
+	if (isWasmMetadataInstance(metadata)) {
+		return metadata as unknown as WasmGainMapMetadata;
+	}
+
+	// Create a new WASM instance and copy properties
+	const wasm = await getWasm();
+	const wasmMetadata = wasm.createDefaultMetadata();
+
+	wasmMetadata.version = metadata.version;
+	wasmMetadata.baseRenditionIsHdr = metadata.baseRenditionIsHdr;
+	wasmMetadata.gainMapMin = metadata.gainMapMin;
+	wasmMetadata.gainMapMax = metadata.gainMapMax;
+	wasmMetadata.gamma = metadata.gamma;
+	wasmMetadata.offsetSdr = metadata.offsetSdr;
+	wasmMetadata.offsetHdr = metadata.offsetHdr;
+	wasmMetadata.hdrCapacityMin = metadata.hdrCapacityMin;
+	wasmMetadata.hdrCapacityMax = metadata.hdrCapacityMax;
+
+	return wasmMetadata;
 }
 
 /**
@@ -206,12 +261,24 @@ export async function encodeUltraHdr(
 	options?: Partial<UltraHdrEncodeOptions>
 ): Promise<ArrayBuffer> {
 	const wasm = await getWasm();
-	const opts = {
-		...defaultEncodeOptions,
-		...options,
-	} as UltraHdrEncodeOptions;
 
-	const result = wasm.encodeUltraHdr(new Uint8Array(sdrBuffer), new Float32Array(hdrBuffer), opts);
+	// Create a proper WASM options instance
+	const wasmOpts = wasm.createDefaultOptions();
+
+	// Apply user-provided options
+	const mergedOpts = { ...defaultEncodeOptions, ...options };
+	wasmOpts.baseQuality = mergedOpts.baseQuality;
+	wasmOpts.gainMapQuality = mergedOpts.gainMapQuality;
+	wasmOpts.targetHdrCapacity = mergedOpts.targetHdrCapacity;
+	wasmOpts.includeIsoMetadata = mergedOpts.includeIsoMetadata;
+	wasmOpts.includeUltrahdrV1 = mergedOpts.includeUltrahdrV1;
+	wasmOpts.gainMapScale = mergedOpts.gainMapScale;
+
+	const result = wasm.encodeUltraHdr(
+		new Uint8Array(sdrBuffer),
+		new Float32Array(hdrBuffer),
+		wasmOpts
+	);
 
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
 	return result.buffer.slice(0) as ArrayBuffer;
@@ -272,7 +339,8 @@ export async function getMetadata(buffer: ArrayBuffer): Promise<GainMapMetadata>
  */
 export async function validateMetadata(metadata: GainMapMetadata): Promise<boolean> {
 	const wasm = await getWasm();
-	return wasm.validateMetadata(metadata);
+	const wasmMetadata = await toWasmMetadata(metadata);
+	return wasm.validateMetadata(wasmMetadata);
 }
 
 /**
@@ -283,7 +351,8 @@ export async function validateMetadata(metadata: GainMapMetadata): Promise<boole
  */
 export async function estimateHdrHeadroom(metadata: GainMapMetadata): Promise<number> {
 	const wasm = await getWasm();
-	return wasm.estimateHdrHeadroom(metadata);
+	const wasmMetadata = await toWasmMetadata(metadata);
+	return wasm.estimateHdrHeadroom(wasmMetadata);
 }
 
 /**
@@ -294,5 +363,6 @@ export async function estimateHdrHeadroom(metadata: GainMapMetadata): Promise<nu
  */
 export async function isMeaningfulHdr(metadata: GainMapMetadata): Promise<boolean> {
 	const wasm = await getWasm();
-	return wasm.isMeaningfulHdr(metadata);
+	const wasmMetadata = await toWasmMetadata(metadata);
+	return wasm.isMeaningfulHdr(wasmMetadata);
 }

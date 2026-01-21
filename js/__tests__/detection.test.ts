@@ -3,11 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { isUltraHdr } from '../src/index';
-import {
-	base64ToArrayBuffer,
-	REGULAR_JPEG_BASE64,
-	PNG_HEADER_BASE64,
-} from './fixtures/test-data';
+import { base64ToArrayBuffer, REGULAR_JPEG_BASE64, PNG_HEADER_BASE64 } from './fixtures/test-data';
 
 describe('isUltraHdr', () => {
 	it('returns false for empty buffer', async () => {

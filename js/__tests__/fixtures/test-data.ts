@@ -18,7 +18,8 @@ export const REGULAR_JPEG_BASE64 =
 /**
  * PNG file header (should not be detected as JPEG or UltraHDR).
  */
-export const PNG_HEADER_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+export const PNG_HEADER_BASE64 =
+	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 /**
  * Converts base64 string to ArrayBuffer.
@@ -69,7 +70,7 @@ export function createSyntheticHdrData(width: number, height: number): Float32Ar
  * Creates a simple grayscale JPEG-like buffer for testing.
  * This is a minimal valid JPEG structure.
  */
-export function createMinimalJpegBuffer(width: number, height: number): ArrayBuffer {
+export function createMinimalJpegBuffer(_width: number, _height: number): ArrayBuffer {
 	// Return the pre-encoded 2x2 JPEG for simplicity
 	// In a real scenario, we'd use a library like sharp or canvas
 	return base64ToArrayBuffer(REGULAR_JPEG_BASE64);

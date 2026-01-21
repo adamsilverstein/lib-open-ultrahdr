@@ -15,7 +15,12 @@ describe('encodeUltraHdr', () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
 		const hdrData = createSyntheticHdrData(2, 2);
 
-		const encoded = await encodeUltraHdr('encode-1', sdrBuffer, hdrData.buffer, defaultEncodeOptions);
+		const encoded = await encodeUltraHdr(
+			'encode-1',
+			sdrBuffer,
+			hdrData.buffer,
+			defaultEncodeOptions
+		);
 
 		// Check JPEG magic bytes (FFD8)
 		const view = new Uint8Array(encoded);

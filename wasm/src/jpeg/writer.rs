@@ -2,8 +2,8 @@
 //!
 //! Writes JPEG files with modified or added segments for UltraHDR.
 
-use crate::error::{Result, UltraHdrError};
 use super::parser::{JpegSegment, MarkerType};
+use crate::error::{Result, UltraHdrError};
 use std::io::Write;
 
 /// JPEG file writer for creating UltraHDR images.
@@ -15,7 +15,10 @@ pub struct JpegWriter {
 impl JpegWriter {
     /// Creates a new JPEG writer with segments from a parsed JPEG.
     pub fn new(segments: Vec<JpegSegment>, scan_data: Vec<u8>) -> Self {
-        Self { segments, scan_data }
+        Self {
+            segments,
+            scan_data,
+        }
     }
 
     /// Creates an empty JPEG writer.
@@ -42,7 +45,7 @@ impl JpegWriter {
 
         if xmp_data.len() + XMP_NAMESPACE.len() > 65533 {
             return Err(UltraHdrError::XmpError(
-                "XMP data too large for single segment".to_string()
+                "XMP data too large for single segment".to_string(),
             ));
         }
 
@@ -60,7 +63,13 @@ impl JpegWriter {
     }
 
     /// Adds an Extended XMP segment.
-    pub fn add_extended_xmp_segment(&mut self, xmp_data: &[u8], md5_digest: &str, offset: u32, total_length: u32) -> Result<()> {
+    pub fn add_extended_xmp_segment(
+        &mut self,
+        xmp_data: &[u8],
+        md5_digest: &str,
+        offset: u32,
+        total_length: u32,
+    ) -> Result<()> {
         const EXT_XMP_NAMESPACE: &[u8] = b"http://ns.adobe.com/xmp/extension/\0";
 
         let mut data = Vec::with_capacity(EXT_XMP_NAMESPACE.len() + 32 + 8 + xmp_data.len());
@@ -101,7 +110,8 @@ impl JpegWriter {
 
     /// Removes all XMP segments.
     pub fn remove_xmp_segments(&mut self) {
-        self.segments.retain(|s| !s.is_xmp() && !s.is_extended_xmp());
+        self.segments
+            .retain(|s| !s.is_xmp() && !s.is_extended_xmp());
     }
 
     /// Removes all MPF segments.
@@ -227,21 +237,21 @@ fn create_mpf_data(gain_map_offset: u32, gain_map_size: u32) -> Vec<u8> {
 
     // Entry 1: MPFVersion (0xB000)
     data.extend_from_slice(&0xB000u16.to_le_bytes()); // Tag
-    data.extend_from_slice(&7u16.to_le_bytes());      // Type: UNDEFINED
-    data.extend_from_slice(&4u32.to_le_bytes());      // Count
-    data.extend_from_slice(b"0100");                  // Value: "0100"
+    data.extend_from_slice(&7u16.to_le_bytes()); // Type: UNDEFINED
+    data.extend_from_slice(&4u32.to_le_bytes()); // Count
+    data.extend_from_slice(b"0100"); // Value: "0100"
 
     // Entry 2: NumberOfImages (0xB001)
     data.extend_from_slice(&0xB001u16.to_le_bytes()); // Tag
-    data.extend_from_slice(&4u32.to_le_bytes());      // Type: LONG
-    data.extend_from_slice(&1u32.to_le_bytes());      // Count
-    data.extend_from_slice(&2u32.to_le_bytes());      // Value: 2 images
+    data.extend_from_slice(&4u32.to_le_bytes()); // Type: LONG
+    data.extend_from_slice(&1u32.to_le_bytes()); // Count
+    data.extend_from_slice(&2u32.to_le_bytes()); // Value: 2 images
 
     // Entry 3: MPEntry (0xB002) - offset to MP Entry
     let mp_entry_offset: u32 = 8 + 2 + (3 * 12) + 4; // TIFF header + count + 3 entries + next IFD pointer
     data.extend_from_slice(&0xB002u16.to_le_bytes()); // Tag
-    data.extend_from_slice(&7u16.to_le_bytes());      // Type: UNDEFINED
-    data.extend_from_slice(&32u32.to_le_bytes());     // Count: 16 bytes per entry * 2 entries
+    data.extend_from_slice(&7u16.to_le_bytes()); // Type: UNDEFINED
+    data.extend_from_slice(&32u32.to_le_bytes()); // Count: 16 bytes per entry * 2 entries
     data.extend_from_slice(&mp_entry_offset.to_le_bytes()); // Offset
 
     // Next IFD pointer (0 = no more IFDs)
@@ -249,17 +259,17 @@ fn create_mpf_data(gain_map_offset: u32, gain_map_size: u32) -> Vec<u8> {
 
     // MP Entry for primary image
     data.extend_from_slice(&0x20030000u32.to_le_bytes()); // Image flags (primary, JPEG)
-    data.extend_from_slice(&0u32.to_le_bytes());          // Size (0 for primary = use actual)
-    data.extend_from_slice(&0u32.to_le_bytes());          // Offset (0 for primary)
-    data.extend_from_slice(&0u16.to_le_bytes());          // Dependent image 1
-    data.extend_from_slice(&0u16.to_le_bytes());          // Dependent image 2
+    data.extend_from_slice(&0u32.to_le_bytes()); // Size (0 for primary = use actual)
+    data.extend_from_slice(&0u32.to_le_bytes()); // Offset (0 for primary)
+    data.extend_from_slice(&0u16.to_le_bytes()); // Dependent image 1
+    data.extend_from_slice(&0u16.to_le_bytes()); // Dependent image 2
 
     // MP Entry for gain map
     data.extend_from_slice(&0x00030000u32.to_le_bytes()); // Image flags (JPEG, not primary)
     data.extend_from_slice(&gain_map_size.to_le_bytes()); // Size
     data.extend_from_slice(&gain_map_offset.to_le_bytes()); // Offset from start of file
-    data.extend_from_slice(&0u16.to_le_bytes());          // Dependent image 1
-    data.extend_from_slice(&0u16.to_le_bytes());          // Dependent image 2
+    data.extend_from_slice(&0u16.to_le_bytes()); // Dependent image 1
+    data.extend_from_slice(&0u16.to_le_bytes()); // Dependent image 2
 
     data
 }

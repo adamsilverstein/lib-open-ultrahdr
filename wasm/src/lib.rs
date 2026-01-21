@@ -119,8 +119,7 @@ pub fn encode_ultra_hdr(
     hdr_buffer: &[f32],
     options: &UltraHdrEncodeOptions,
 ) -> std::result::Result<Vec<u8>, JsValue> {
-    ultrahdr::encode(sdr_buffer, hdr_buffer, options)
-        .map_err(|e| JsValue::from_str(&e.to_string()))
+    ultrahdr::encode(sdr_buffer, hdr_buffer, options).map_err(|e| JsValue::from_str(&e.to_string()))
 }
 
 /// Extracts just the SDR base image from an UltraHDR JPEG.
@@ -244,7 +243,9 @@ pub fn is_meaningful_hdr(metadata: &GainMapMetadata) -> bool {
 }
 
 // Re-export types for use in WASM
-pub use types::{ColorGamut, GainMapMetadata, TransferFunction, UltraHdrDecodeResult, UltraHdrEncodeOptions};
+pub use types::{
+    ColorGamut, GainMapMetadata, TransferFunction, UltraHdrDecodeResult, UltraHdrEncodeOptions,
+};
 
 #[cfg(test)]
 mod tests {

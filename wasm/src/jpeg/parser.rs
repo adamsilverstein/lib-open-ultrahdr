@@ -82,7 +82,10 @@ impl MarkerType {
 
     /// Returns true if this marker has an associated length field.
     pub fn has_length(&self) -> bool {
-        !matches!(self, MarkerType::Soi | MarkerType::Eoi | MarkerType::Other(0x00) | MarkerType::Other(0xFF))
+        !matches!(
+            self,
+            MarkerType::Soi | MarkerType::Eoi | MarkerType::Other(0x00) | MarkerType::Other(0xFF)
+        )
     }
 }
 
@@ -100,7 +103,11 @@ pub struct JpegSegment {
 impl JpegSegment {
     /// Creates a new JPEG segment.
     pub fn new(marker: MarkerType, data: Vec<u8>, offset: usize) -> Self {
-        Self { marker, data, offset }
+        Self {
+            marker,
+            data,
+            offset,
+        }
     }
 
     /// Checks if this segment contains XMP data.
@@ -116,7 +123,8 @@ impl JpegSegment {
         if self.marker != MarkerType::App1 {
             return false;
         }
-        self.data.starts_with(b"http://ns.adobe.com/xmp/extension/\0")
+        self.data
+            .starts_with(b"http://ns.adobe.com/xmp/extension/\0")
     }
 
     /// Checks if this segment contains Exif data.
@@ -169,7 +177,9 @@ impl JpegParser {
 
         // Check for JPEG magic bytes
         if data[0] != 0xFF || data[1] != 0xD8 {
-            return Err(UltraHdrError::InvalidJpeg("Missing JPEG SOI marker".to_string()));
+            return Err(UltraHdrError::InvalidJpeg(
+                "Missing JPEG SOI marker".to_string(),
+            ));
         }
 
         let mut segments = Vec::new();
@@ -212,7 +222,11 @@ impl JpegParser {
 
             match marker {
                 MarkerType::Eoi => {
-                    segments.push(JpegSegment::new(MarkerType::Eoi, Vec::new(), cursor.position() as usize - 2));
+                    segments.push(JpegSegment::new(
+                        MarkerType::Eoi,
+                        Vec::new(),
+                        cursor.position() as usize - 2,
+                    ));
                     break;
                 }
                 MarkerType::Soi => {
@@ -252,7 +266,11 @@ impl JpegParser {
                                 scan_data.push(0x00);
                             } else if byte[0] == 0xD9 {
                                 // EOI
-                                segments.push(JpegSegment::new(MarkerType::Eoi, Vec::new(), cursor.position() as usize - 2));
+                                segments.push(JpegSegment::new(
+                                    MarkerType::Eoi,
+                                    Vec::new(),
+                                    cursor.position() as usize - 2,
+                                ));
                                 in_scan = false;
                             } else if byte[0] >= 0xD0 && byte[0] <= 0xD7 {
                                 // Restart marker

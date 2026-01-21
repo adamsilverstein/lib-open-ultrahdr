@@ -2,10 +2,10 @@
 //!
 //! Implements the gain map computation algorithm from ISO 21496-1.
 
+use super::math::{compute_gain_ratio, encode_gain, srgb_to_linear};
+use super::metadata::MetadataComputer;
 use crate::error::{Result, UltraHdrError};
 use crate::types::GainMapMetadata;
-use super::math::{encode_gain, compute_gain_ratio, srgb_to_linear};
-use super::metadata::MetadataComputer;
 
 /// Computes a gain map from an SDR and HDR image pair.
 ///
@@ -34,13 +34,19 @@ pub fn compute_gain_map(
     if sdr_rgb.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "SDR buffer size {} doesn't match {}x{}x3 = {}",
-            sdr_rgb.len(), width, height, pixel_count * 3
+            sdr_rgb.len(),
+            width,
+            height,
+            pixel_count * 3
         )));
     }
     if hdr_linear.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "HDR buffer size {} doesn't match {}x{}x3 = {}",
-            hdr_linear.len(), width, height, pixel_count * 3
+            hdr_linear.len(),
+            width,
+            height,
+            pixel_count * 3
         )));
     }
 
@@ -105,9 +111,24 @@ pub fn compute_gain_map(
             let ratio_b = compute_gain_ratio(sdr_lin_b, hdr_b, offset, offset);
 
             // Encode gains
-            let gain_r = encode_gain(ratio_r, metadata.gain_map_min[0], metadata.gain_map_max[0], metadata.gamma[0]);
-            let gain_g = encode_gain(ratio_g, metadata.gain_map_min[1], metadata.gain_map_max[1], metadata.gamma[1]);
-            let gain_b = encode_gain(ratio_b, metadata.gain_map_min[2], metadata.gain_map_max[2], metadata.gamma[2]);
+            let gain_r = encode_gain(
+                ratio_r,
+                metadata.gain_map_min[0],
+                metadata.gain_map_max[0],
+                metadata.gamma[0],
+            );
+            let gain_g = encode_gain(
+                ratio_g,
+                metadata.gain_map_min[1],
+                metadata.gain_map_max[1],
+                metadata.gamma[1],
+            );
+            let gain_b = encode_gain(
+                ratio_b,
+                metadata.gain_map_min[2],
+                metadata.gain_map_max[2],
+                metadata.gamma[2],
+            );
 
             // For a single-channel gain map, use luminance-weighted average
             // Using BT.709 weights
@@ -137,13 +158,17 @@ pub fn compute_gain_map_rgb(
     if sdr_rgb.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "SDR buffer size {} doesn't match {}x{}x3",
-            sdr_rgb.len(), width, height
+            sdr_rgb.len(),
+            width,
+            height
         )));
     }
     if hdr_linear.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "HDR buffer size {} doesn't match {}x{}x3",
-            hdr_linear.len(), width, height
+            hdr_linear.len(),
+            width,
+            height
         )));
     }
 
@@ -165,7 +190,11 @@ pub fn compute_gain_map_rgb(
 
         metadata_computer.add_sample(
             [sdr_lin_r, sdr_lin_g, sdr_lin_b],
-            [hdr_linear[i * 3], hdr_linear[i * 3 + 1], hdr_linear[i * 3 + 2]],
+            [
+                hdr_linear[i * 3],
+                hdr_linear[i * 3 + 1],
+                hdr_linear[i * 3 + 2],
+            ],
             offset,
             offset,
         );
@@ -195,9 +224,24 @@ pub fn compute_gain_map_rgb(
             let ratio_g = compute_gain_ratio(sdr_lin_g, hdr_g, offset, offset);
             let ratio_b = compute_gain_ratio(sdr_lin_b, hdr_b, offset, offset);
 
-            let gain_r = encode_gain(ratio_r, metadata.gain_map_min[0], metadata.gain_map_max[0], metadata.gamma[0]);
-            let gain_g = encode_gain(ratio_g, metadata.gain_map_min[1], metadata.gain_map_max[1], metadata.gamma[1]);
-            let gain_b = encode_gain(ratio_b, metadata.gain_map_min[2], metadata.gain_map_max[2], metadata.gamma[2]);
+            let gain_r = encode_gain(
+                ratio_r,
+                metadata.gain_map_min[0],
+                metadata.gain_map_max[0],
+                metadata.gamma[0],
+            );
+            let gain_g = encode_gain(
+                ratio_g,
+                metadata.gain_map_min[1],
+                metadata.gain_map_max[1],
+                metadata.gamma[1],
+            );
+            let gain_b = encode_gain(
+                ratio_b,
+                metadata.gain_map_min[2],
+                metadata.gain_map_max[2],
+                metadata.gamma[2],
+            );
 
             let gm_idx = (gy * gm_width + gx) as usize;
             gain_map[gm_idx * 3] = (gain_r * 255.0).clamp(0.0, 255.0) as u8;

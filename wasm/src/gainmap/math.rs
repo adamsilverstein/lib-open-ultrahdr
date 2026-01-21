@@ -69,11 +69,7 @@ pub fn srgb_to_linear(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
 /// Converts linear RGB to sRGB.
 #[inline]
 pub fn linear_to_srgb(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
-    (
-        srgb_oetf(r),
-        srgb_oetf(g),
-        srgb_oetf(b),
-    )
+    (srgb_oetf(r), srgb_oetf(g), srgb_oetf(b))
 }
 
 // ============================================================================
@@ -298,7 +294,11 @@ pub fn inverse_transfer_function(r: f32, g: f32, b: f32, tf: TransferFunction) -
         TransferFunction::Srgb => srgb_to_linear(r, g, b),
         TransferFunction::Linear => (r, g, b),
         TransferFunction::Pq => (pq_inverse_oetf(r), pq_inverse_oetf(g), pq_inverse_oetf(b)),
-        TransferFunction::Hlg => (hlg_inverse_oetf(r), hlg_inverse_oetf(g), hlg_inverse_oetf(b)),
+        TransferFunction::Hlg => (
+            hlg_inverse_oetf(r),
+            hlg_inverse_oetf(g),
+            hlg_inverse_oetf(b),
+        ),
     }
 }
 
@@ -369,7 +369,13 @@ mod tests {
             let linear = i as f32 / 100.0;
             let srgb = srgb_oetf(linear);
             let back = srgb_inverse_oetf(srgb);
-            assert!(approx_eq(linear, back), "Failed at {}: {} vs {}", linear, linear, back);
+            assert!(
+                approx_eq(linear, back),
+                "Failed at {}: {} vs {}",
+                linear,
+                linear,
+                back
+            );
         }
     }
 
@@ -381,7 +387,13 @@ mod tests {
             let linear = i as f32 / 100.0;
             let pq = pq_oetf(linear);
             let back = pq_inverse_oetf(pq);
-            assert!((linear - back).abs() < PQ_TOLERANCE, "Failed at {}: {} vs {}", linear, linear, back);
+            assert!(
+                (linear - back).abs() < PQ_TOLERANCE,
+                "Failed at {}: {} vs {}",
+                linear,
+                linear,
+                back
+            );
         }
     }
 
@@ -391,7 +403,13 @@ mod tests {
             let linear = i as f32 / 100.0;
             let hlg = hlg_oetf(linear);
             let back = hlg_inverse_oetf(hlg);
-            assert!(approx_eq(linear, back), "Failed at {}: {} vs {}", linear, linear, back);
+            assert!(
+                approx_eq(linear, back),
+                "Failed at {}: {} vs {}",
+                linear,
+                linear,
+                back
+            );
         }
     }
 
@@ -416,7 +434,13 @@ mod tests {
         for &ratio in &ratios {
             let encoded = encode_gain(ratio, min_gain, max_gain, gamma);
             let decoded = decode_gain(encoded, min_gain, max_gain, gamma);
-            assert!(approx_eq(ratio, decoded), "Failed at {}: {} vs {}", ratio, ratio, decoded);
+            assert!(
+                approx_eq(ratio, decoded),
+                "Failed at {}: {} vs {}",
+                ratio,
+                ratio,
+                decoded
+            );
         }
     }
 

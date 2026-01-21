@@ -22,12 +22,7 @@
  */
 
 // Re-export types
-export type {
-	ItemId,
-	GainMapMetadata,
-	UltraHdrDecodeResult,
-	UltraHdrEncodeOptions,
-} from './types';
+export type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions } from './types';
 
 export {
 	ColorGamut,
@@ -37,34 +32,29 @@ export {
 	smallSizeEncodeOptions,
 } from './types';
 
-import type {
-	ItemId,
-	GainMapMetadata,
-	UltraHdrDecodeResult,
-	UltraHdrEncodeOptions,
-} from './types';
+import type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions } from './types';
 
 import { defaultEncodeOptions } from './types';
 
 // WASM module type (these come from the generated WASM bindings)
 interface UltraHdrWasmModule {
-	default: ( moduleOrPath?: string | URL | Response ) => Promise< unknown >;
-	isUltraHdr: ( buffer: Uint8Array ) => boolean;
-	decodeUltraHdr: ( buffer: Uint8Array ) => UltraHdrDecodeResult;
+	default: (moduleOrPath?: string | URL | Response) => Promise<unknown>;
+	isUltraHdr: (buffer: Uint8Array) => boolean;
+	decodeUltraHdr: (buffer: Uint8Array) => UltraHdrDecodeResult;
 	encodeUltraHdr: (
 		sdrBuffer: Uint8Array,
 		hdrBuffer: Float32Array,
 		options: UltraHdrEncodeOptions
 	) => Uint8Array;
-	extractSdrBase: ( buffer: Uint8Array ) => Uint8Array;
-	getMetadata: ( buffer: Uint8Array ) => GainMapMetadata;
+	extractSdrBase: (buffer: Uint8Array) => Uint8Array;
+	getMetadata: (buffer: Uint8Array) => GainMapMetadata;
 	createDefaultOptions: () => UltraHdrEncodeOptions;
 	createHighQualityOptions: () => UltraHdrEncodeOptions;
 	createSmallSizeOptions: () => UltraHdrEncodeOptions;
 	createDefaultMetadata: () => GainMapMetadata;
-	validateMetadata: ( metadata: GainMapMetadata ) => boolean;
-	estimateHdrHeadroom: ( metadata: GainMapMetadata ) => number;
-	isMeaningfulHdr: ( metadata: GainMapMetadata ) => boolean;
+	validateMetadata: (metadata: GainMapMetadata) => boolean;
+	estimateHdrHeadroom: (metadata: GainMapMetadata) => number;
+	isMeaningfulHdr: (metadata: GainMapMetadata) => boolean;
 }
 
 /**
@@ -81,7 +71,7 @@ let wasmInstance: UltraHdrWasmModule | null = null;
 /**
  * Promise for ongoing WASM initialization.
  */
-let initPromise: Promise< UltraHdrWasmModule > | null = null;
+let initPromise: Promise<UltraHdrWasmModule> | null = null;
 
 /**
  * Sets the location/public path for loading WASM files.
@@ -97,33 +87,31 @@ let initPromise: Promise< UltraHdrWasmModule > | null = null;
  * setLocation('/assets/wasm/');
  * ```
  */
-export function setLocation( newLocation: string ): void {
+export function setLocation(newLocation: string): void {
 	location = newLocation;
 }
 
 /**
  * Gets the WASM module, initializing it if necessary.
  */
-async function getWasm(): Promise< UltraHdrWasmModule > {
-	if ( wasmInstance ) {
+async function getWasm(): Promise<UltraHdrWasmModule> {
+	if (wasmInstance) {
 		return wasmInstance;
 	}
 
-	if ( initPromise ) {
+	if (initPromise) {
 		return initPromise;
 	}
 
-	initPromise = ( async () => {
+	initPromise = (async () => {
 		// Dynamic import of the WASM package
-		const UltraHdrWasm = ( await import(
-			'open-ultrahdr-wasm'
-		) ) as unknown as UltraHdrWasmModule;
+		const UltraHdrWasm = (await import('open-ultrahdr-wasm')) as unknown as UltraHdrWasmModule;
 
 		// Initialize WASM with the location prefix for the .wasm file
 		// If location is set, construct the full URL to the WASM file
-		if ( location ) {
+		if (location) {
 			const wasmUrl = location + 'open_ultrahdr_bg.wasm';
-			await UltraHdrWasm.default( wasmUrl );
+			await UltraHdrWasm.default(wasmUrl);
 		} else {
 			// Let the WASM module use its default URL resolution (import.meta.url)
 			await UltraHdrWasm.default();
@@ -131,7 +119,7 @@ async function getWasm(): Promise< UltraHdrWasmModule > {
 
 		wasmInstance = UltraHdrWasm as unknown as UltraHdrWasmModule;
 		return wasmInstance;
-	} )();
+	})();
 
 	return initPromise;
 }
@@ -153,9 +141,9 @@ async function getWasm(): Promise< UltraHdrWasmModule > {
  * }
  * ```
  */
-export async function isUltraHdr( buffer: ArrayBuffer ): Promise< boolean > {
+export async function isUltraHdr(buffer: ArrayBuffer): Promise<boolean> {
 	const wasm = await getWasm();
-	return wasm.isUltraHdr( new Uint8Array( buffer ) );
+	return wasm.isUltraHdr(new Uint8Array(buffer));
 }
 
 /**
@@ -181,9 +169,9 @@ export async function isUltraHdr( buffer: ArrayBuffer ): Promise< boolean > {
 export async function decodeUltraHdr(
 	id: ItemId,
 	buffer: ArrayBuffer
-): Promise< UltraHdrDecodeResult > {
+): Promise<UltraHdrDecodeResult> {
 	const wasm = await getWasm();
-	return wasm.decodeUltraHdr( new Uint8Array( buffer ) );
+	return wasm.decodeUltraHdr(new Uint8Array(buffer));
 }
 
 /**
@@ -215,22 +203,18 @@ export async function encodeUltraHdr(
 	id: ItemId,
 	sdrBuffer: ArrayBuffer,
 	hdrBuffer: ArrayBuffer,
-	options?: Partial< UltraHdrEncodeOptions >
-): Promise< ArrayBuffer > {
+	options?: Partial<UltraHdrEncodeOptions>
+): Promise<ArrayBuffer> {
 	const wasm = await getWasm();
 	const opts = {
 		...defaultEncodeOptions,
 		...options,
 	} as UltraHdrEncodeOptions;
 
-	const result = wasm.encodeUltraHdr(
-		new Uint8Array( sdrBuffer ),
-		new Float32Array( hdrBuffer ),
-		opts
-	);
+	const result = wasm.encodeUltraHdr(new Uint8Array(sdrBuffer), new Float32Array(hdrBuffer), opts);
 
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice( 0 ) as ArrayBuffer;
+	return result.buffer.slice(0) as ArrayBuffer;
 }
 
 /**
@@ -251,13 +235,11 @@ export async function encodeUltraHdr(
  * const blob = new Blob([sdrBuffer], { type: 'image/jpeg' });
  * ```
  */
-export async function extractSdrBase(
-	buffer: ArrayBuffer
-): Promise< ArrayBuffer > {
+export async function extractSdrBase(buffer: ArrayBuffer): Promise<ArrayBuffer> {
 	const wasm = await getWasm();
-	const result = wasm.extractSdrBase( new Uint8Array( buffer ) );
+	const result = wasm.extractSdrBase(new Uint8Array(buffer));
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice( 0 ) as ArrayBuffer;
+	return result.buffer.slice(0) as ArrayBuffer;
 }
 
 /**
@@ -277,11 +259,9 @@ export async function extractSdrBase(
  * console.log('HDR headroom:', metadata.hdrCapacityMax, 'stops');
  * ```
  */
-export async function getMetadata(
-	buffer: ArrayBuffer
-): Promise< GainMapMetadata > {
+export async function getMetadata(buffer: ArrayBuffer): Promise<GainMapMetadata> {
 	const wasm = await getWasm();
-	return wasm.getMetadata( new Uint8Array( buffer ) );
+	return wasm.getMetadata(new Uint8Array(buffer));
 }
 
 /**
@@ -290,11 +270,9 @@ export async function getMetadata(
  * @param metadata - The metadata to validate.
  * @return True if the metadata is valid.
  */
-export async function validateMetadata(
-	metadata: GainMapMetadata
-): Promise< boolean > {
+export async function validateMetadata(metadata: GainMapMetadata): Promise<boolean> {
 	const wasm = await getWasm();
-	return wasm.validateMetadata( metadata );
+	return wasm.validateMetadata(metadata);
 }
 
 /**
@@ -303,11 +281,9 @@ export async function validateMetadata(
  * @param metadata - The gain map metadata.
  * @return Maximum additional stops of dynamic range above SDR.
  */
-export async function estimateHdrHeadroom(
-	metadata: GainMapMetadata
-): Promise< number > {
+export async function estimateHdrHeadroom(metadata: GainMapMetadata): Promise<number> {
 	const wasm = await getWasm();
-	return wasm.estimateHdrHeadroom( metadata );
+	return wasm.estimateHdrHeadroom(metadata);
 }
 
 /**
@@ -316,9 +292,7 @@ export async function estimateHdrHeadroom(
  * @param metadata - The gain map metadata.
  * @return True if the gain map provides significant dynamic range extension.
  */
-export async function isMeaningfulHdr(
-	metadata: GainMapMetadata
-): Promise< boolean > {
+export async function isMeaningfulHdr(metadata: GainMapMetadata): Promise<boolean> {
 	const wasm = await getWasm();
-	return wasm.isMeaningfulHdr( metadata );
+	return wasm.isMeaningfulHdr(metadata);
 }

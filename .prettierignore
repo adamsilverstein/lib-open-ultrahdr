@@ -1,0 +1,8 @@
+node_modules/
+dist/
+wasm/pkg/
+wasm/target/
+*.wasm
+*.jpg
+*.jpeg
+*.png

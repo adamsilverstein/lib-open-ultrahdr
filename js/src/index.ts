@@ -287,7 +287,7 @@ export async function encodeUltraHdr(
 	);
 
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice(0) as ArrayBuffer;
+	return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) as ArrayBuffer;
 }
 
 /**

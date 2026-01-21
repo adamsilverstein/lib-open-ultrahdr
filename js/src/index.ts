@@ -167,8 +167,18 @@ async function getWasm(): Promise<UltraHdrWasmModule> {
 			// If location is set, construct the full URL to the WASM file
 			if (location) {
 				const base = location.endsWith('/') ? location : `${location}/`;
-				const wasmUrl = base + 'open_ultrahdr_bg.wasm';
-				await UltraHdrWasm.default(wasmUrl);
+				const wasmPath = base + 'open_ultrahdr_bg.wasm';
+
+				// In Node.js, load the WASM file from the filesystem
+				// instead of using fetch which doesn't work with file:// URLs
+				if (typeof process !== 'undefined' && process.versions && process.versions.node) {
+					const fs = await import('fs');
+					const wasmBytes = await fs.promises.readFile(wasmPath);
+					await UltraHdrWasm.default(wasmBytes);
+				} else {
+					// In browser, use the URL directly
+					await UltraHdrWasm.default(wasmPath);
+				}
 			} else {
 				// Let the WASM module use its default URL resolution (import.meta.url)
 				await UltraHdrWasm.default();
@@ -287,7 +297,10 @@ export async function encodeUltraHdr(
 	);
 
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) as ArrayBuffer;
+	return result.buffer.slice(
+		result.byteOffset,
+		result.byteOffset + result.byteLength
+	) as ArrayBuffer;
 }
 
 /**
@@ -312,7 +325,10 @@ export async function extractSdrBase(buffer: ArrayBuffer): Promise<ArrayBuffer> 
 	const wasm = await getWasm();
 	const result = wasm.extractSdrBase(new Uint8Array(buffer));
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) as ArrayBuffer;
+	return result.buffer.slice(
+		result.byteOffset,
+		result.byteOffset + result.byteLength
+	) as ArrayBuffer;
 }
 
 /**

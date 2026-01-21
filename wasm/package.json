@@ -1,0 +1,51 @@
+{
+	"name": "open-ultrahdr-wasm",
+	"version": "0.1.0",
+	"description": "UltraHDR (ISO 21496-1) gain map WASM implementation",
+	"author": "Adam Silverstein",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"ultrahdr",
+		"hdr",
+		"gain-map",
+		"iso-21496",
+		"wasm",
+		"webassembly"
+	],
+	"homepage": "https://github.com/adamsilverstein/lib-open-ultrahdr",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr.git",
+		"directory": "wasm"
+	},
+	"bugs": {
+		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr/issues"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"files": [
+		"pkg",
+		"*.md"
+	],
+	"main": "pkg/open_ultrahdr.js",
+	"module": "pkg/open_ultrahdr.js",
+	"types": "pkg/open_ultrahdr.d.ts",
+	"exports": {
+		".": {
+			"types": "./pkg/open_ultrahdr.d.ts",
+			"import": "./pkg/open_ultrahdr.js",
+			"default": "./pkg/open_ultrahdr.js"
+		},
+		"./pkg/*": "./pkg/*",
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build": "wasm-pack build --target web --out-dir pkg",
+		"build:release": "wasm-pack build --target web --out-dir pkg --release",
+		"test": "cargo test"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

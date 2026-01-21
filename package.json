@@ -1,0 +1,27 @@
+{
+	"name": "lib-open-ultrahdr",
+	"version": "0.1.0",
+	"private": true,
+	"description": "UltraHDR (ISO 21496-1) gain map implementation - monorepo",
+	"author": "Adam Silverstein",
+	"license": "GPL-2.0-or-later",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr.git"
+	},
+	"workspaces": [
+		"wasm",
+		"js"
+	],
+	"scripts": {
+		"build:wasm": "cd wasm && npm run build",
+		"build:wasm:release": "cd wasm && npm run build:release",
+		"build:js": "cd js && npm run build",
+		"build": "npm run build:wasm && npm run build:js",
+		"test:wasm": "cd wasm && cargo test",
+		"test": "npm run test:wasm"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}

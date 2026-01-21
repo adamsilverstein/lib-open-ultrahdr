@@ -1,0 +1,59 @@
+{
+	"name": "open-ultrahdr",
+	"version": "0.1.0",
+	"description": "UltraHDR (ISO 21496-1) gain map support for JavaScript/TypeScript",
+	"author": "Adam Silverstein",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"ultrahdr",
+		"hdr",
+		"gain-map",
+		"iso-21496",
+		"jpeg",
+		"image-processing"
+	],
+	"homepage": "https://github.com/adamsilverstein/lib-open-ultrahdr",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr.git",
+		"directory": "js"
+	},
+	"bugs": {
+		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr/issues"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	},
+	"files": [
+		"src",
+		"dist",
+		"*.md"
+	],
+	"main": "dist/index.js",
+	"module": "dist/index.mjs",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.mjs",
+			"require": "./dist/index.js",
+			"default": "./dist/index.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"scripts": {
+		"build": "tsup src/index.ts --format cjs,esm --dts --clean",
+		"dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"open-ultrahdr-wasm": "^0.1.0"
+	},
+	"devDependencies": {
+		"tsup": "^8.0.0",
+		"typescript": "^5.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
+	}
+}

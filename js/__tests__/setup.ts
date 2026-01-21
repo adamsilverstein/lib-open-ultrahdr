@@ -1,22 +1,20 @@
 /**
  * Vitest setup file for e2e tests.
  *
- * Initializes the WASM module before tests run by loading the binary directly.
+ * Initializes the WASM module before tests run by setting the location
+ * to coordinate with the library's initialization.
  */
 import { beforeAll } from 'vitest';
-import { readFile } from 'fs/promises';
+import { setLocation } from '../src/index';
+import { resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 beforeAll(async () => {
-	// Load WASM bytes directly using Node.js fs
-	const wasmPath = resolve(__dirname, '../../wasm/pkg/open_ultrahdr_bg.wasm');
-	const wasmBytes = await readFile(wasmPath);
-
-	// Import and initialize the WASM module with the bytes
-	const wasmModule = await import('../../wasm/pkg/open_ultrahdr.js');
-	await wasmModule.default(wasmBytes);
+	// Set the WASM location to coordinate with the library's getWasm() initialization
+	const wasmPath = resolve(__dirname, '../../wasm/pkg/');
+	setLocation(wasmPath);
 });

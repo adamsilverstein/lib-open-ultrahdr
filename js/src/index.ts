@@ -159,21 +159,27 @@ async function getWasm(): Promise<UltraHdrWasmModule> {
 	}
 
 	initPromise = (async () => {
-		// Dynamic import of the WASM package
-		const UltraHdrWasm = (await import('open-ultrahdr-wasm')) as unknown as UltraHdrWasmModule;
+		try {
+			// Dynamic import of the WASM package
+			const UltraHdrWasm = (await import('open-ultrahdr-wasm')) as unknown as UltraHdrWasmModule;
 
-		// Initialize WASM with the location prefix for the .wasm file
-		// If location is set, construct the full URL to the WASM file
-		if (location) {
-			const wasmUrl = location + 'open_ultrahdr_bg.wasm';
-			await UltraHdrWasm.default(wasmUrl);
-		} else {
-			// Let the WASM module use its default URL resolution (import.meta.url)
-			await UltraHdrWasm.default();
+			// Initialize WASM with the location prefix for the .wasm file
+			// If location is set, construct the full URL to the WASM file
+			if (location) {
+				const base = location.endsWith('/') ? location : `${location}/`;
+				const wasmUrl = base + 'open_ultrahdr_bg.wasm';
+				await UltraHdrWasm.default(wasmUrl);
+			} else {
+				// Let the WASM module use its default URL resolution (import.meta.url)
+				await UltraHdrWasm.default();
+			}
+
+			wasmInstance = UltraHdrWasm as unknown as UltraHdrWasmModule;
+			return wasmInstance;
+		} catch (err) {
+			initPromise = null;
+			throw err;
 		}
-
-		wasmInstance = UltraHdrWasm as unknown as UltraHdrWasmModule;
-		return wasmInstance;
 	})();
 
 	return initPromise;
@@ -306,7 +312,7 @@ export async function extractSdrBase(buffer: ArrayBuffer): Promise<ArrayBuffer> 
 	const wasm = await getWasm();
 	const result = wasm.extractSdrBase(new Uint8Array(buffer));
 	// Ensure we return a proper ArrayBuffer (not SharedArrayBuffer)
-	return result.buffer.slice(0) as ArrayBuffer;
+	return result.buffer.slice(result.byteOffset, result.byteOffset + result.byteLength) as ArrayBuffer;
 }
 
 /**

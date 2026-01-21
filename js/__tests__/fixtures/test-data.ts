@@ -50,8 +50,8 @@ export function createSyntheticHdrData(width: number, height: number): Float32Ar
 		const y = Math.floor(i / width);
 
 		// Create a gradient with highlight boost
-		const normalizedX = x / (width - 1);
-		const normalizedY = y / (height - 1);
+		const normalizedX = width > 1 ? x / (width - 1) : 0;
+		const normalizedY = height > 1 ? y / (height - 1) : 0;
 
 		// Base SDR values with highlight boost for HDR
 		const r = Math.min(normalizedX * 2.0, 2.0); // Up to 2x boost

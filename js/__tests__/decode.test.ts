@@ -25,7 +25,7 @@ describe('decodeUltraHdr', () => {
 		const randomBuffer = new ArrayBuffer(1000);
 		const view = new Uint8Array(randomBuffer);
 		for (let i = 0; i < view.length; i++) {
-			view[i] = Math.floor(Math.random() * 256);
+			view[i] = (i * 31) & 0xff;
 		}
 		await expect(decodeUltraHdr('random', randomBuffer)).rejects.toThrow();
 	});

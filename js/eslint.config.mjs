@@ -12,7 +12,7 @@ export default tseslint.config(
 	...tseslint.configs.stylistic,
 	prettier,
 	{
-		files: ['**/*.ts'],
+		files: ['src/**/*.ts'],
 		languageOptions: {
 			parserOptions: {
 				project: './tsconfig.json',
@@ -24,8 +24,15 @@ export default tseslint.config(
 		},
 	},
 	{
-		files: ['__tests__/**/*.ts'],
+		files: ['__tests__/**/*.ts', 'vitest.config.ts'],
+		languageOptions: {
+			parserOptions: {
+				project: './tsconfig.test.json',
+				tsconfigRootDir: import.meta.dirname,
+			},
+		},
 		rules: {
+			'@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
 			'@typescript-eslint/no-explicit-any': 'off',
 		},
 	}

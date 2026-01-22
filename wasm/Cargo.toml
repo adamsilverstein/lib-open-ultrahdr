@@ -10,6 +10,9 @@ readme = "README.md"
 keywords = ["ultrahdr", "hdr", "gain-map", "iso-21496", "wasm"]
 categories = ["multimedia::images", "wasm"]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 

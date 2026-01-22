@@ -52,7 +52,7 @@
 		"lint:fix": "eslint src __tests__ --fix"
 	},
 	"dependencies": {
-		"open-ultrahdr-wasm": "^0.1.0"
+		"open-ultrahdr-wasm": "^0.1.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.0.0",

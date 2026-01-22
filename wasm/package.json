@@ -1,6 +1,6 @@
 {
 	"name": "open-ultrahdr-wasm",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "UltraHDR (ISO 21496-1) gain map WASM implementation",
 	"author": "Adam Silverstein",
 	"license": "GPL-2.0-or-later",
@@ -15,7 +15,7 @@
 	"homepage": "https://github.com/adamsilverstein/lib-open-ultrahdr",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr.git",
+		"url": "git+https://github.com/adamsilverstein/lib-open-ultrahdr.git",
 		"directory": "wasm"
 	},
 	"bugs": {

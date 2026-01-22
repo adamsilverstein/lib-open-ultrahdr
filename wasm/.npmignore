@@ -1,0 +1,11 @@
+# Ignore everything except what we need for the package
+src/
+target/
+tests/
+Cargo.toml
+Cargo.lock
+rustfmt.toml
+.gitignore
+
+# Don't ignore pkg folder contents
+!pkg/

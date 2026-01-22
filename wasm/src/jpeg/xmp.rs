@@ -132,7 +132,8 @@ impl XmpParser {
         }
 
         // Handle comma or space separated values
-        let parts: Vec<&str> = value.split(|c| c == ',' || c == ' ')
+        let parts: Vec<&str> = value
+            .split(|c| c == ',' || c == ' ')
             .filter(|s| !s.is_empty())
             .collect();
 
@@ -165,7 +166,11 @@ impl XmpWriter {
         let mut writer = Writer::new(Cursor::new(Vec::new()));
 
         // XML declaration
-        writer.write_event(Event::Decl(quick_xml::events::BytesDecl::new("1.0", Some("UTF-8"), None)))?;
+        writer.write_event(Event::Decl(quick_xml::events::BytesDecl::new(
+            "1.0",
+            Some("UTF-8"),
+            None,
+        )))?;
 
         // XMP packet wrapper
         let mut xmpmeta = BytesStart::new("x:xmpmeta");
@@ -192,7 +197,14 @@ impl XmpWriter {
         let hdr_capacity_max = format!("{:.6}", metadata.hdr_capacity_max);
 
         desc.push_attribute(("hdrgm:Version", metadata.version.as_str()));
-        desc.push_attribute(("hdrgm:BaseRenditionIsHDR", if metadata.base_rendition_is_hdr { "True" } else { "False" }));
+        desc.push_attribute((
+            "hdrgm:BaseRenditionIsHDR",
+            if metadata.base_rendition_is_hdr {
+                "True"
+            } else {
+                "False"
+            },
+        ));
         desc.push_attribute(("hdrgm:GainMapMin", gain_map_min.as_str()));
         desc.push_attribute(("hdrgm:GainMapMax", gain_map_max.as_str()));
         desc.push_attribute(("hdrgm:Gamma", gamma.as_str()));
@@ -211,11 +223,18 @@ impl XmpWriter {
     }
 
     /// Creates XMP data with UltraHDR v1 Container extension.
-    pub fn create_ultrahdr_v1_xmp(metadata: &GainMapMetadata, gain_map_mime: &str) -> Result<Vec<u8>> {
+    pub fn create_ultrahdr_v1_xmp(
+        metadata: &GainMapMetadata,
+        gain_map_mime: &str,
+    ) -> Result<Vec<u8>> {
         let mut writer = Writer::new(Cursor::new(Vec::new()));
 
         // XML declaration
-        writer.write_event(Event::Decl(quick_xml::events::BytesDecl::new("1.0", Some("UTF-8"), None)))?;
+        writer.write_event(Event::Decl(quick_xml::events::BytesDecl::new(
+            "1.0",
+            Some("UTF-8"),
+            None,
+        )))?;
 
         // XMP packet wrapper
         let mut xmpmeta = BytesStart::new("x:xmpmeta");
@@ -242,7 +261,14 @@ impl XmpWriter {
         let mut desc = BytesStart::new("rdf:Description");
         desc.push_attribute(("rdf:about", ""));
         desc.push_attribute(("hdrgm:Version", metadata.version.as_str()));
-        desc.push_attribute(("hdrgm:BaseRenditionIsHDR", if metadata.base_rendition_is_hdr { "True" } else { "False" }));
+        desc.push_attribute((
+            "hdrgm:BaseRenditionIsHDR",
+            if metadata.base_rendition_is_hdr {
+                "True"
+            } else {
+                "False"
+            },
+        ));
         desc.push_attribute(("hdrgm:GainMapMin", gain_map_min.as_str()));
         desc.push_attribute(("hdrgm:GainMapMax", gain_map_max.as_str()));
         desc.push_attribute(("hdrgm:Gamma", gamma.as_str()));
@@ -293,7 +319,8 @@ impl XmpWriter {
             // Single value if all channels are the same
             format!("{:.6}", values[0])
         } else {
-            values.iter()
+            values
+                .iter()
                 .map(|v| format!("{:.6}", v))
                 .collect::<Vec<_>>()
                 .join(", ")
@@ -343,7 +370,8 @@ mod tests {
 
     #[test]
     fn test_has_gain_map_metadata() {
-        let xmp_with = b"<x:xmpmeta xmlns:hdrgm=\"http://ns.adobe.com/hdr-gain-map/1.0/\"></x:xmpmeta>";
+        let xmp_with =
+            b"<x:xmpmeta xmlns:hdrgm=\"http://ns.adobe.com/hdr-gain-map/1.0/\"></x:xmpmeta>";
         let xmp_without = b"<x:xmpmeta></x:xmpmeta>";
 
         assert!(XmpParser::has_gain_map_metadata(xmp_with));

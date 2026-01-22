@@ -2,9 +2,11 @@
 //!
 //! Implements the gain map application algorithm from ISO 21496-1.
 
+use super::math::{
+    apply_gain_to_pixel, compute_hdr_weight, decode_gain, linear_to_srgb, srgb_to_linear,
+};
 use crate::error::{Result, UltraHdrError};
 use crate::types::GainMapMetadata;
-use super::math::{decode_gain, apply_gain_to_pixel, compute_hdr_weight, srgb_to_linear, linear_to_srgb};
 
 /// Applies a gain map to an SDR image to produce an HDR result.
 ///
@@ -37,13 +39,17 @@ pub fn apply_gain_map(
     if sdr_rgb.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "SDR buffer size {} doesn't match {}x{}x3",
-            sdr_rgb.len(), width, height
+            sdr_rgb.len(),
+            width,
+            height
         )));
     }
     if gain_map.len() != gm_pixel_count {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "Gain map size {} doesn't match {}x{}",
-            gain_map.len(), gm_width, gm_height
+            gain_map.len(),
+            gm_width,
+            gm_height
         )));
     }
 
@@ -80,9 +86,24 @@ pub fn apply_gain_map(
             let effective_min = interpolate_per_channel(&metadata.gain_map_min, hdr_weight);
             let effective_max = interpolate_per_channel(&metadata.gain_map_max, hdr_weight);
 
-            let gain_r = decode_gain(gain_encoded, effective_min[0], effective_max[0], metadata.gamma[0]);
-            let gain_g = decode_gain(gain_encoded, effective_min[1], effective_max[1], metadata.gamma[1]);
-            let gain_b = decode_gain(gain_encoded, effective_min[2], effective_max[2], metadata.gamma[2]);
+            let gain_r = decode_gain(
+                gain_encoded,
+                effective_min[0],
+                effective_max[0],
+                metadata.gamma[0],
+            );
+            let gain_g = decode_gain(
+                gain_encoded,
+                effective_min[1],
+                effective_max[1],
+                metadata.gamma[1],
+            );
+            let gain_b = decode_gain(
+                gain_encoded,
+                effective_min[2],
+                effective_max[2],
+                metadata.gamma[2],
+            );
 
             // Apply gain to each channel
             let hdr_r = apply_gain_to_pixel(
@@ -130,13 +151,17 @@ pub fn apply_gain_map_rgb(
     if sdr_rgb.len() != pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "SDR buffer size {} doesn't match {}x{}x3",
-            sdr_rgb.len(), width, height
+            sdr_rgb.len(),
+            width,
+            height
         )));
     }
     if gain_map_rgb.len() != gm_pixel_count * 3 {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "RGB gain map size {} doesn't match {}x{}x3",
-            gain_map_rgb.len(), gm_width, gm_height
+            gain_map_rgb.len(),
+            gm_width,
+            gm_height
         )));
     }
 
@@ -162,20 +187,49 @@ pub fn apply_gain_map_rgb(
 
             let gm_x = x as f32 * scale_x;
             let gm_y = y as f32 * scale_y;
-            let (gain_enc_r, gain_enc_g, gain_enc_b) = sample_gain_map_rgb_bilinear(
-                gain_map_rgb, gm_width, gm_height, gm_x, gm_y
-            );
+            let (gain_enc_r, gain_enc_g, gain_enc_b) =
+                sample_gain_map_rgb_bilinear(gain_map_rgb, gm_width, gm_height, gm_x, gm_y);
 
             let effective_min = interpolate_per_channel(&metadata.gain_map_min, hdr_weight);
             let effective_max = interpolate_per_channel(&metadata.gain_map_max, hdr_weight);
 
-            let gain_r = decode_gain(gain_enc_r, effective_min[0], effective_max[0], metadata.gamma[0]);
-            let gain_g = decode_gain(gain_enc_g, effective_min[1], effective_max[1], metadata.gamma[1]);
-            let gain_b = decode_gain(gain_enc_b, effective_min[2], effective_max[2], metadata.gamma[2]);
+            let gain_r = decode_gain(
+                gain_enc_r,
+                effective_min[0],
+                effective_max[0],
+                metadata.gamma[0],
+            );
+            let gain_g = decode_gain(
+                gain_enc_g,
+                effective_min[1],
+                effective_max[1],
+                metadata.gamma[1],
+            );
+            let gain_b = decode_gain(
+                gain_enc_b,
+                effective_min[2],
+                effective_max[2],
+                metadata.gamma[2],
+            );
 
-            hdr_output[idx * 3] = apply_gain_to_pixel(sdr_lin_r, gain_r, metadata.offset_sdr[0], metadata.offset_hdr[0]);
-            hdr_output[idx * 3 + 1] = apply_gain_to_pixel(sdr_lin_g, gain_g, metadata.offset_sdr[1], metadata.offset_hdr[1]);
-            hdr_output[idx * 3 + 2] = apply_gain_to_pixel(sdr_lin_b, gain_b, metadata.offset_sdr[2], metadata.offset_hdr[2]);
+            hdr_output[idx * 3] = apply_gain_to_pixel(
+                sdr_lin_r,
+                gain_r,
+                metadata.offset_sdr[0],
+                metadata.offset_hdr[0],
+            );
+            hdr_output[idx * 3 + 1] = apply_gain_to_pixel(
+                sdr_lin_g,
+                gain_g,
+                metadata.offset_sdr[1],
+                metadata.offset_hdr[1],
+            );
+            hdr_output[idx * 3 + 2] = apply_gain_to_pixel(
+                sdr_lin_b,
+                gain_b,
+                metadata.offset_sdr[2],
+                metadata.offset_hdr[2],
+            );
         }
     }
 
@@ -292,9 +346,7 @@ mod tests {
         let metadata = GainMapMetadata::default();
 
         let result = apply_gain_map(
-            &sdr, &gain_map, &metadata,
-            width, height, width, height,
-            3.0
+            &sdr, &gain_map, &metadata, width, height, width, height, 3.0,
         );
 
         assert!(result.is_ok());
@@ -315,9 +367,7 @@ mod tests {
         let metadata = GainMapMetadata::default();
 
         let result = apply_gain_map(
-            &sdr, &gain_map, &metadata,
-            width, height, gm_width, gm_height,
-            3.0
+            &sdr, &gain_map, &metadata, width, height, gm_width, gm_height, 3.0,
         );
 
         assert!(result.is_ok());

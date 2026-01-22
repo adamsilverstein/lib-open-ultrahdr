@@ -9,47 +9,53 @@ use crate::types::GainMapMetadata;
 pub fn validate_metadata(metadata: &GainMapMetadata) -> Result<()> {
     // Validate channel counts
     if metadata.gain_map_min.len() != 3 {
-        return Err(UltraHdrError::MetadataError(
-            format!("gain_map_min must have 3 values, got {}", metadata.gain_map_min.len())
-        ));
+        return Err(UltraHdrError::MetadataError(format!(
+            "gain_map_min must have 3 values, got {}",
+            metadata.gain_map_min.len()
+        )));
     }
     if metadata.gain_map_max.len() != 3 {
-        return Err(UltraHdrError::MetadataError(
-            format!("gain_map_max must have 3 values, got {}", metadata.gain_map_max.len())
-        ));
+        return Err(UltraHdrError::MetadataError(format!(
+            "gain_map_max must have 3 values, got {}",
+            metadata.gain_map_max.len()
+        )));
     }
     if metadata.gamma.len() != 3 {
-        return Err(UltraHdrError::MetadataError(
-            format!("gamma must have 3 values, got {}", metadata.gamma.len())
-        ));
+        return Err(UltraHdrError::MetadataError(format!(
+            "gamma must have 3 values, got {}",
+            metadata.gamma.len()
+        )));
     }
     if metadata.offset_sdr.len() != 3 {
-        return Err(UltraHdrError::MetadataError(
-            format!("offset_sdr must have 3 values, got {}", metadata.offset_sdr.len())
-        ));
+        return Err(UltraHdrError::MetadataError(format!(
+            "offset_sdr must have 3 values, got {}",
+            metadata.offset_sdr.len()
+        )));
     }
     if metadata.offset_hdr.len() != 3 {
-        return Err(UltraHdrError::MetadataError(
-            format!("offset_hdr must have 3 values, got {}", metadata.offset_hdr.len())
-        ));
+        return Err(UltraHdrError::MetadataError(format!(
+            "offset_hdr must have 3 values, got {}",
+            metadata.offset_hdr.len()
+        )));
     }
 
     // Validate gain range
     for i in 0..3 {
         if metadata.gain_map_min[i] > metadata.gain_map_max[i] {
-            return Err(UltraHdrError::MetadataError(
-                format!("gain_map_min[{}] ({}) > gain_map_max[{}] ({})",
-                    i, metadata.gain_map_min[i], i, metadata.gain_map_max[i])
-            ));
+            return Err(UltraHdrError::MetadataError(format!(
+                "gain_map_min[{}] ({}) > gain_map_max[{}] ({})",
+                i, metadata.gain_map_min[i], i, metadata.gain_map_max[i]
+            )));
         }
     }
 
     // Validate gamma (must be positive)
     for (i, &g) in metadata.gamma.iter().enumerate() {
         if g <= 0.0 {
-            return Err(UltraHdrError::MetadataError(
-                format!("gamma[{}] must be positive, got {}", i, g)
-            ));
+            return Err(UltraHdrError::MetadataError(format!(
+                "gamma[{}] must be positive, got {}",
+                i, g
+            )));
         }
     }
 
@@ -138,7 +144,9 @@ impl Default for MetadataComputer {
 ///
 /// Returns the maximum additional stops of dynamic range above SDR.
 pub fn estimate_hdr_headroom(metadata: &GainMapMetadata) -> f32 {
-    let max_gain = metadata.gain_map_max.iter()
+    let max_gain = metadata
+        .gain_map_max
+        .iter()
         .copied()
         .fold(f32::MIN, f32::max);
     max_gain.max(0.0)

@@ -3,9 +3,9 @@
 //! Extracts SDR base, gain map, and metadata from UltraHDR JPEG files.
 
 use crate::error::{Result, UltraHdrError};
-use crate::types::{GainMapMetadata, UltraHdrDecodeResult};
 use crate::jpeg::parser::JpegParser;
 use crate::jpeg::xmp::XmpParser;
+use crate::types::{GainMapMetadata, UltraHdrDecodeResult};
 
 /// Checks if a JPEG contains UltraHDR/gain map metadata.
 pub fn has_gainmap_metadata(data: &[u8]) -> bool {
@@ -34,8 +34,9 @@ pub fn decode(data: &[u8]) -> Result<UltraHdrDecodeResult> {
     let parser = JpegParser::parse(data)?;
 
     // Get image dimensions
-    let (width, height) = parser.get_dimensions()
-        .ok_or_else(|| UltraHdrError::InvalidJpeg("Cannot determine image dimensions".to_string()))?;
+    let (width, height) = parser.get_dimensions().ok_or_else(|| {
+        UltraHdrError::InvalidJpeg("Cannot determine image dimensions".to_string())
+    })?;
 
     // Extract metadata from XMP
     let metadata = extract_metadata_from_parser(&parser)?;
@@ -47,13 +48,7 @@ pub fn decode(data: &[u8]) -> Result<UltraHdrDecodeResult> {
     let sdr_image = extract_sdr_from_parser(data, &parser)?;
 
     Ok(UltraHdrDecodeResult::new(
-        sdr_image,
-        gain_map,
-        metadata,
-        width,
-        height,
-        gm_width,
-        gm_height,
+        sdr_image, gain_map, metadata, width, height, gm_width, gm_height,
     ))
 }
 
@@ -74,10 +69,10 @@ pub fn extract_metadata(data: &[u8]) -> Result<GainMapMetadata> {
 /// Extracts gain map metadata from parsed JPEG.
 fn extract_metadata_from_parser(parser: &JpegParser) -> Result<GainMapMetadata> {
     // Find XMP segment
-    let xmp_segment = parser.find_xmp_segment()
-        .ok_or(UltraHdrError::NoGainMap)?;
+    let xmp_segment = parser.find_xmp_segment().ok_or(UltraHdrError::NoGainMap)?;
 
-    let xmp_data = xmp_segment.get_xmp_data()
+    let xmp_data = xmp_segment
+        .get_xmp_data()
         .ok_or_else(|| UltraHdrError::XmpError("Invalid XMP segment".to_string()))?;
 
     if !XmpParser::has_gain_map_metadata(xmp_data) {
@@ -196,7 +191,9 @@ fn find_primary_eoi_offset(data: &[u8]) -> Result<usize> {
         }
     }
 
-    Err(UltraHdrError::InvalidJpeg("Could not find EOI marker".to_string()))
+    Err(UltraHdrError::InvalidJpeg(
+        "Could not find EOI marker".to_string(),
+    ))
 }
 
 /// Parses MPF segment data to find gain map offset and size.
@@ -231,9 +228,19 @@ fn parse_mpf_for_gainmap(mpf_data: &[u8]) -> Option<(u32, u32)> {
             return None;
         }
         Some(if little_endian {
-            u32::from_le_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+            u32::from_le_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+            ])
         } else {
-            u32::from_be_bytes([data[offset], data[offset + 1], data[offset + 2], data[offset + 3]])
+            u32::from_be_bytes([
+                data[offset],
+                data[offset + 1],
+                data[offset + 2],
+                data[offset + 3],
+            ])
         })
     };
 
@@ -287,8 +294,9 @@ fn parse_mpf_for_gainmap(mpf_data: &[u8]) -> Option<(u32, u32)> {
 /// Gets dimensions from a JPEG.
 fn get_jpeg_dimensions(jpeg_data: &[u8]) -> Result<(u32, u32)> {
     let parser = JpegParser::parse(jpeg_data)?;
-    parser.get_dimensions()
-        .ok_or_else(|| UltraHdrError::InvalidJpeg("Cannot determine gain map dimensions".to_string()))
+    parser.get_dimensions().ok_or_else(|| {
+        UltraHdrError::InvalidJpeg("Cannot determine gain map dimensions".to_string())
+    })
 }
 
 #[cfg(test)]

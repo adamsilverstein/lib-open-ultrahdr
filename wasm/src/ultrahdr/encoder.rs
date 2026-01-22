@@ -3,11 +3,11 @@
 //! Creates UltraHDR JPEG files from SDR + HDR image pairs.
 
 use crate::error::{Result, UltraHdrError};
-use crate::types::{GainMapMetadata, UltraHdrEncodeOptions};
 use crate::gainmap::encode::compute_gain_map;
 use crate::jpeg::parser::JpegParser;
 use crate::jpeg::writer::JpegWriter;
 use crate::jpeg::xmp::XmpWriter;
+use crate::types::{GainMapMetadata, UltraHdrEncodeOptions};
 use image::{ImageBuffer, Luma};
 use std::io::Cursor;
 
@@ -30,19 +30,22 @@ pub fn encode(
 
     // Parse the SDR JPEG to get segments and dimensions
     let parser = JpegParser::parse(sdr_jpeg)?;
-    let (width, height) = parser.get_dimensions()
-        .ok_or_else(|| UltraHdrError::InvalidJpeg("Cannot determine image dimensions".to_string()))?;
+    let (width, height) = parser.get_dimensions().ok_or_else(|| {
+        UltraHdrError::InvalidJpeg("Cannot determine image dimensions".to_string())
+    })?;
 
     // Validate dimensions
     if width % 2 != 0 {
-        return Err(UltraHdrError::InvalidDimensions(
-            format!("Width must be even, got {}", width)
-        ));
+        return Err(UltraHdrError::InvalidDimensions(format!(
+            "Width must be even, got {}",
+            width
+        )));
     }
     if height % 2 != 0 {
-        return Err(UltraHdrError::InvalidDimensions(
-            format!("Height must be even, got {}", height)
-        ));
+        return Err(UltraHdrError::InvalidDimensions(format!(
+            "Height must be even, got {}",
+            height
+        )));
     }
 
     // Decode SDR JPEG to get raw RGB data
@@ -51,15 +54,19 @@ pub fn encode(
     if sdr_rgb.len() != expected_size {
         return Err(UltraHdrError::InvalidDimensions(format!(
             "SDR RGB size {} doesn't match dimensions {}x{}",
-            sdr_rgb.len(), width, height
+            sdr_rgb.len(),
+            width,
+            height
         )));
     }
 
     // Validate HDR data size
     if hdr_linear.len() != expected_size {
         return Err(UltraHdrError::DimensionMismatch(
-            width, height,
-            (hdr_linear.len() / 3) as u32 / height, height
+            width,
+            height,
+            (hdr_linear.len() / 3) as u32 / height,
+            height,
         ));
     }
 
@@ -79,15 +86,15 @@ pub fn encode(
     let gm_height = (height + scale - 1) / scale;
 
     // Encode gain map as JPEG
-    let gain_map_jpeg = encode_gain_map_jpeg(&gain_map_data, gm_width, gm_height, options.gain_map_quality)?;
+    let gain_map_jpeg = encode_gain_map_jpeg(
+        &gain_map_data,
+        gm_width,
+        gm_height,
+        options.gain_map_quality,
+    )?;
 
     // Create the final UltraHDR JPEG
-    create_ultrahdr_jpeg(
-        sdr_jpeg,
-        &gain_map_jpeg,
-        &metadata,
-        options,
-    )
+    create_ultrahdr_jpeg(sdr_jpeg, &gain_map_jpeg, &metadata, options)
 }
 
 /// Encodes an UltraHDR JPEG from already-computed components.
@@ -111,7 +118,10 @@ fn validate_options(options: &UltraHdrEncodeOptions) -> Result<()> {
         return Err(UltraHdrError::InvalidQuality(options.gain_map_quality));
     }
     if options.target_hdr_capacity <= 0.0 {
-        return Err(UltraHdrError::InvalidHdrCapacity(0.0, options.target_hdr_capacity));
+        return Err(UltraHdrError::InvalidHdrCapacity(
+            0.0,
+            options.target_hdr_capacity,
+        ));
     }
     Ok(())
 }
@@ -126,16 +136,13 @@ fn decode_jpeg_to_rgb(jpeg_data: &[u8]) -> Result<Vec<u8>> {
 /// Encodes a grayscale gain map as JPEG.
 fn encode_gain_map_jpeg(data: &[u8], width: u32, height: u32, quality: u8) -> Result<Vec<u8>> {
     let img: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_raw(width, height, data.to_vec())
-        .ok_or_else(|| UltraHdrError::EncodeError("Failed to create gain map image".to_string()))?;
+        .ok_or_else(|| {
+        UltraHdrError::EncodeError("Failed to create gain map image".to_string())
+    })?;
 
     let mut output = Cursor::new(Vec::new());
     let mut encoder = image::codecs::jpeg::JpegEncoder::new_with_quality(&mut output, quality);
-    encoder.encode(
-        img.as_raw(),
-        width,
-        height,
-        image::ExtendedColorType::L8,
-    )?;
+    encoder.encode(img.as_raw(), width, height, image::ExtendedColorType::L8)?;
 
     Ok(output.into_inner())
 }
@@ -151,10 +158,7 @@ fn create_ultrahdr_jpeg(
     let parser = JpegParser::parse(sdr_jpeg)?;
 
     // Create writer with existing segments
-    let mut writer = JpegWriter::new(
-        parser.segments().to_vec(),
-        parser.scan_data().to_vec(),
-    );
+    let mut writer = JpegWriter::new(parser.segments().to_vec(), parser.scan_data().to_vec());
 
     // Remove any existing XMP/MPF segments
     writer.remove_xmp_segments();
@@ -167,7 +171,7 @@ fn create_ultrahdr_jpeg(
         XmpWriter::create_iso_xmp(metadata)?
     } else {
         return Err(UltraHdrError::MetadataError(
-            "At least one metadata format must be enabled".to_string()
+            "At least one metadata format must be enabled".to_string(),
         ));
     };
 
@@ -180,10 +184,7 @@ fn create_ultrahdr_jpeg(
     // Add MPF segment pointing to gain map
     // Need to re-parse and re-write with MPF included
     let parser2 = JpegParser::parse(&base_jpeg)?;
-    let mut writer2 = JpegWriter::new(
-        parser2.segments().to_vec(),
-        parser2.scan_data().to_vec(),
-    );
+    let mut writer2 = JpegWriter::new(parser2.segments().to_vec(), parser2.scan_data().to_vec());
 
     // Recalculate offset after adding MPF (MPF segment is ~100 bytes)
     let estimated_mpf_size = 120;

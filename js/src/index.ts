@@ -22,7 +22,13 @@
  */
 
 // Re-export types
-export type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions, UltraHdrProbeResult } from './types';
+export type {
+	ItemId,
+	GainMapMetadata,
+	UltraHdrDecodeResult,
+	UltraHdrEncodeOptions,
+	UltraHdrProbeResult,
+} from './types';
 
 export {
 	ColorGamut,
@@ -32,7 +38,13 @@ export {
 	smallSizeEncodeOptions,
 } from './types';
 
-import type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions, UltraHdrProbeResult } from './types';
+import type {
+	ItemId,
+	GainMapMetadata,
+	UltraHdrDecodeResult,
+	UltraHdrEncodeOptions,
+	UltraHdrProbeResult,
+} from './types';
 
 import { defaultEncodeOptions } from './types';
 

@@ -1,0 +1,88 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Perform a dry run (no actual publish)'
+        type: boolean
+        default: false
+  release:
+    types: [published]
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  NODE_VERSION: '20'
+
+jobs:
+  publish:
+    name: Publish Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            wasm/target
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('wasm/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-wasm-
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build WASM package (release)
+        run: npm run build:wasm:release
+
+      - name: Build JS package
+        run: npm run build:js
+
+      - name: Run tests
+        run: npm run test:js
+
+      - name: Publish WASM package
+        run: |
+          cd wasm
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "Dry run: would publish open-ultrahdr-wasm"
+            npm publish --dry-run
+          else
+            npm publish
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish JS package
+        run: |
+          cd js
+          if [ "${{ github.event.inputs.dry_run }}" == "true" ]; then
+            echo "Dry run: would publish open-ultrahdr"
+            npm publish --dry-run
+          else
+            npm publish
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

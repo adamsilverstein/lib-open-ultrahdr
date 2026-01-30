@@ -174,6 +174,38 @@ GPL-2.0-or-later
 
 All Rust dependencies are MIT/Apache-2.0 licensed, ensuring GPL-2.0 compatibility.
 
+## Releasing
+
+This project uses GitHub Actions to publish packages to npm.
+
+### Automatic Release
+
+Create a GitHub release with a version tag (e.g., `v0.1.2`). The workflow will automatically:
+1. Build both packages
+2. Run tests
+3. Publish `open-ultrahdr-wasm` to npm
+4. Publish `open-ultrahdr` to npm
+
+### Manual Release
+
+1. Go to **Actions** > **Publish to npm** in the GitHub repository
+2. Click **Run workflow**
+3. Optionally enable "Perform a dry run" to test without publishing
+4. Click **Run workflow**
+
+### Before Releasing
+
+1. Update version numbers in both `wasm/package.json` and `js/package.json`
+2. Ensure `js/package.json` has the correct `open-ultrahdr-wasm` dependency version
+3. Commit version changes to main branch
+
+### Required Setup (Maintainers)
+
+Add an `NPM_TOKEN` secret to the repository:
+1. Create an npm automation token at https://www.npmjs.com/settings/tokens
+2. Go to repository **Settings** > **Secrets and variables** > **Actions**
+3. Add a new secret named `NPM_TOKEN` with the token value
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or pull request on GitHub.

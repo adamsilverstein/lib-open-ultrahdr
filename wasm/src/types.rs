@@ -255,3 +255,75 @@ impl Default for TransferFunction {
         TransferFunction::Srgb
     }
 }
+
+/// Result of probing an image to check if it's UltraHDR.
+///
+/// This provides detailed information about what components were found
+/// without fully decoding the image. Useful for batch processing and filtering.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[wasm_bindgen(getter_with_clone)]
+pub struct UltraHdrProbeResult {
+    /// Whether the image is a valid UltraHDR image (has all required components)
+    #[wasm_bindgen(js_name = isValid)]
+    pub is_valid: bool,
+
+    /// Whether a primary JPEG image was found
+    #[wasm_bindgen(js_name = hasPrimaryImage)]
+    pub has_primary_image: bool,
+
+    /// Whether a gain map image was found
+    #[wasm_bindgen(js_name = hasGainMap)]
+    pub has_gain_map: bool,
+
+    /// Whether gain map metadata (XMP) was found
+    #[wasm_bindgen(js_name = hasMetadata)]
+    pub has_metadata: bool,
+
+    /// Primary image width in pixels (0 if not found)
+    pub width: u32,
+
+    /// Primary image height in pixels (0 if not found)
+    pub height: u32,
+
+    /// Gain map width in pixels (0 if not found)
+    #[wasm_bindgen(js_name = gainMapWidth)]
+    pub gain_map_width: u32,
+
+    /// Gain map height in pixels (0 if not found)
+    #[wasm_bindgen(js_name = gainMapHeight)]
+    pub gain_map_height: u32,
+
+    /// HDR capacity (max additional stops of dynamic range), 0 if not found
+    #[wasm_bindgen(js_name = hdrCapacity)]
+    pub hdr_capacity: f32,
+
+    /// Metadata version string (empty if not found)
+    #[wasm_bindgen(js_name = metadataVersion)]
+    pub metadata_version: String,
+}
+
+#[wasm_bindgen]
+impl UltraHdrProbeResult {
+    /// Creates a new probe result with default (invalid) values.
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl Default for UltraHdrProbeResult {
+    fn default() -> Self {
+        Self {
+            is_valid: false,
+            has_primary_image: false,
+            has_gain_map: false,
+            has_metadata: false,
+            width: 0,
+            height: 0,
+            gain_map_width: 0,
+            gain_map_height: 0,
+            hdr_capacity: 0.0,
+            metadata_version: String::new(),
+        }
+    }
+}

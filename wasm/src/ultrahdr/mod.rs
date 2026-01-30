@@ -6,5 +6,5 @@
 pub mod decoder;
 pub mod encoder;
 
-pub use decoder::{decode, extract_base, extract_metadata, has_gainmap_metadata};
+pub use decoder::{decode, extract_base, extract_metadata, has_gainmap_metadata, probe};
 pub use encoder::encode;

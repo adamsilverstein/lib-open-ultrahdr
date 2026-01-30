@@ -62,6 +62,47 @@ pub fn is_ultra_hdr(buffer: &[u8]) -> bool {
     ultrahdr::has_gainmap_metadata(buffer)
 }
 
+/// Probes an image to check if it's UltraHDR and extracts component information.
+///
+/// This function efficiently validates if an image is UltraHDR by checking for
+/// required components (primary image, gain map, metadata) without full decoding.
+/// Returns structured results useful for batch processing and filtering.
+///
+/// Unlike `isUltraHdr`, this function provides detailed information about what
+/// was found, making it useful for diagnostics and filtering workflows.
+///
+/// # Arguments
+/// * `buffer` - Image file contents as bytes
+///
+/// # Returns
+/// `UltraHdrProbeResult` containing:
+/// - `isValid`: Whether the image is a valid UltraHDR image
+/// - `hasPrimaryImage`: Whether a primary JPEG was found
+/// - `hasGainMap`: Whether a gain map image was found
+/// - `hasMetadata`: Whether XMP metadata was found
+/// - `width`, `height`: Primary image dimensions (0 if not found)
+/// - `gainMapWidth`, `gainMapHeight`: Gain map dimensions (0 if not found)
+/// - `hdrCapacity`: HDR capacity in stops (0 if not found)
+/// - `metadataVersion`: Metadata version string (empty if not found)
+///
+/// # Example (JavaScript)
+/// ```js
+/// const buffer = await file.arrayBuffer();
+/// const result = probeUltraHdr(new Uint8Array(buffer));
+/// if (result.isValid) {
+///     console.log('UltraHDR image:', result.width, 'x', result.height);
+///     console.log('HDR capacity:', result.hdrCapacity, 'stops');
+/// } else {
+///     if (!result.hasPrimaryImage) console.log('Not a JPEG');
+///     if (!result.hasGainMap) console.log('No gain map found');
+///     if (!result.hasMetadata) console.log('No HDR metadata');
+/// }
+/// ```
+#[wasm_bindgen(js_name = probeUltraHdr)]
+pub fn probe_ultra_hdr(buffer: &[u8]) -> UltraHdrProbeResult {
+    ultrahdr::probe(buffer)
+}
+
 /// Decodes an UltraHDR JPEG, extracting SDR base, gain map, and metadata.
 ///
 /// # Arguments
@@ -245,6 +286,7 @@ pub fn is_meaningful_hdr(metadata: &GainMapMetadata) -> bool {
 // Re-export types for use in WASM
 pub use types::{
     ColorGamut, GainMapMetadata, TransferFunction, UltraHdrDecodeResult, UltraHdrEncodeOptions,
+    UltraHdrProbeResult,
 };
 
 #[cfg(test)]

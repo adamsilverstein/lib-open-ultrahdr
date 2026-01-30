@@ -74,7 +74,7 @@ describe('probeUltraHdr', () => {
 			new ArrayBuffer(2), // Two bytes
 			base64ToArrayBuffer(PNG_HEADER_BASE64), // PNG
 			base64ToArrayBuffer(REGULAR_JPEG_BASE64), // Regular JPEG
-			new Uint8Array([0xFF, 0xD8, 0xFF]).buffer, // Truncated JPEG
+			new Uint8Array([0xff, 0xd8, 0xff]).buffer, // Truncated JPEG
 			new Uint8Array([0x00, 0x00, 0x00, 0x00]).buffer, // Random bytes
 		];
 

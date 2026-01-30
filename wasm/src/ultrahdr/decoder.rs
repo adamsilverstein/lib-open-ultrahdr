@@ -75,14 +75,17 @@ fn probe_for_gain_map(data: &[u8], parser: &JpegParser) -> Option<(u32, u32)> {
     // Method 1: Try MPF segment
     if let Some(mpf_segment) = parser.find_mpf_segment() {
         if let Some((offset, size)) = parse_mpf_for_gainmap(&mpf_segment.data) {
-            let offset = offset as usize;
-            let size = size as usize;
+            let offset_usize = offset as usize;
+            let size_usize = size as usize;
 
-            if offset + size <= data.len() {
-                let gain_map_jpeg = &data[offset..offset + size];
-                if let Ok(gm_parser) = JpegParser::parse(gain_map_jpeg) {
-                    if let Some((gm_width, gm_height)) = gm_parser.get_dimensions() {
-                        return Some((gm_width, gm_height));
+            // Use checked arithmetic to avoid potential overflow on wasm32
+            if let Some(end) = offset_usize.checked_add(size_usize) {
+                if end <= data.len() {
+                    let gain_map_jpeg = &data[offset_usize..end];
+                    if let Ok(gm_parser) = JpegParser::parse(gain_map_jpeg) {
+                        if let Some((gm_width, gm_height)) = gm_parser.get_dimensions() {
+                            return Some((gm_width, gm_height));
+                        }
                     }
                 }
             }
@@ -477,7 +480,7 @@ mod tests {
         for data in test_cases {
             let result = probe(data);
             // Should return a valid result struct, not panic
-            assert!(result.width == 0 || result.width > 0); // Always defined
+            assert_eq!(result.width, 0);
         }
     }
 }

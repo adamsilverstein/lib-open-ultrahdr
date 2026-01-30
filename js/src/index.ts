@@ -22,7 +22,7 @@
  */
 
 // Re-export types
-export type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions } from './types';
+export type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions, UltraHdrProbeResult } from './types';
 
 export {
 	ColorGamut,
@@ -32,7 +32,7 @@ export {
 	smallSizeEncodeOptions,
 } from './types';
 
-import type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions } from './types';
+import type { ItemId, GainMapMetadata, UltraHdrDecodeResult, UltraHdrEncodeOptions, UltraHdrProbeResult } from './types';
 
 import { defaultEncodeOptions } from './types';
 
@@ -62,6 +62,7 @@ interface WasmGainMapMetadata {
 interface UltraHdrWasmModule {
 	default: (moduleOrPath?: string | URL | Response | BufferSource) => Promise<unknown>;
 	isUltraHdr: (buffer: Uint8Array) => boolean;
+	probeUltraHdr: (buffer: Uint8Array) => UltraHdrProbeResult;
 	decodeUltraHdr: (buffer: Uint8Array) => UltraHdrDecodeResult;
 	encodeUltraHdr: (
 		sdrBuffer: Uint8Array,
@@ -215,6 +216,41 @@ async function getWasm(): Promise<UltraHdrWasmModule> {
 export async function isUltraHdr(buffer: ArrayBuffer): Promise<boolean> {
 	const wasm = await getWasm();
 	return wasm.isUltraHdr(new Uint8Array(buffer));
+}
+
+/**
+ * Probes an image to check if it's UltraHDR and extracts component information.
+ *
+ * This function efficiently validates if an image is UltraHDR by checking for
+ * required components (primary image, gain map, metadata) without full decoding.
+ * Returns structured results useful for batch processing and filtering.
+ *
+ * Unlike `isUltraHdr`, this function provides detailed information about what
+ * was found, making it useful for diagnostics and filtering workflows.
+ *
+ * @param buffer - Image file contents.
+ * @return Probe result with detailed component information.
+ *
+ * @example
+ * ```typescript
+ * const buffer = await file.arrayBuffer();
+ * const result = await probeUltraHdr(buffer);
+ *
+ * if (result.isValid) {
+ *     console.log('UltraHDR image:', result.width, 'x', result.height);
+ *     console.log('HDR capacity:', result.hdrCapacity, 'stops');
+ *     console.log('Gain map:', result.gainMapWidth, 'x', result.gainMapHeight);
+ * } else {
+ *     // Diagnose why it's not a valid UltraHDR
+ *     if (!result.hasPrimaryImage) console.log('Not a valid JPEG');
+ *     if (!result.hasGainMap) console.log('Missing gain map');
+ *     if (!result.hasMetadata) console.log('Missing HDR metadata');
+ * }
+ * ```
+ */
+export async function probeUltraHdr(buffer: ArrayBuffer): Promise<UltraHdrProbeResult> {
+	const wasm = await getWasm();
+	return wasm.probeUltraHdr(new Uint8Array(buffer));
 }
 
 /**

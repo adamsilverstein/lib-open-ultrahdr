@@ -5,7 +5,106 @@
 use crate::error::{Result, UltraHdrError};
 use crate::jpeg::parser::JpegParser;
 use crate::jpeg::xmp::XmpParser;
-use crate::types::{GainMapMetadata, UltraHdrDecodeResult};
+use crate::types::{GainMapMetadata, UltraHdrDecodeResult, UltraHdrProbeResult};
+
+/// Probes an image to check if it's UltraHDR and extracts component information.
+///
+/// This function efficiently validates if an image is UltraHDR by checking for
+/// required components (primary image, gain map, metadata) without full decoding.
+/// Returns structured results useful for batch processing and filtering.
+///
+/// # Arguments
+/// * `data` - Raw bytes of the image file
+///
+/// # Returns
+/// `UltraHdrProbeResult` with detailed information about what was found.
+/// This function never throws - it always returns a result.
+pub fn probe(data: &[u8]) -> UltraHdrProbeResult {
+    let mut result = UltraHdrProbeResult::default();
+
+    // Quick check for JPEG magic bytes (early return if not JPEG)
+    if data.len() < 2 || data[0] != 0xFF || data[1] != 0xD8 {
+        return result;
+    }
+
+    // We found a JPEG - mark primary image as found
+    result.has_primary_image = true;
+
+    // Try to parse JPEG structure
+    let parser = match JpegParser::parse(data) {
+        Ok(p) => p,
+        Err(_) => return result,
+    };
+
+    // Get dimensions from SOF marker
+    if let Some((width, height)) = parser.get_dimensions() {
+        result.width = width;
+        result.height = height;
+    }
+
+    // Check for XMP metadata with gain map info
+    if let Some(xmp_segment) = parser.find_xmp_segment() {
+        if let Some(xmp_data) = xmp_segment.get_xmp_data() {
+            if XmpParser::has_gain_map_metadata(xmp_data) {
+                result.has_metadata = true;
+
+                // Try to extract HDR capacity and version from metadata
+                if let Ok(metadata) = XmpParser::parse(xmp_data) {
+                    result.hdr_capacity = metadata.hdr_capacity_max;
+                    result.metadata_version = metadata.version;
+                }
+            }
+        }
+    }
+
+    // Probe for gain map image
+    if let Some((gm_width, gm_height)) = probe_for_gain_map(data, &parser) {
+        result.has_gain_map = true;
+        result.gain_map_width = gm_width;
+        result.gain_map_height = gm_height;
+    }
+
+    // Image is valid UltraHDR if it has all required components
+    result.is_valid = result.has_primary_image && result.has_gain_map && result.has_metadata;
+
+    result
+}
+
+/// Probes for gain map presence and returns its dimensions if found.
+fn probe_for_gain_map(data: &[u8], parser: &JpegParser) -> Option<(u32, u32)> {
+    // Method 1: Try MPF segment
+    if let Some(mpf_segment) = parser.find_mpf_segment() {
+        if let Some((offset, size)) = parse_mpf_for_gainmap(&mpf_segment.data) {
+            let offset = offset as usize;
+            let size = size as usize;
+
+            if offset + size <= data.len() {
+                let gain_map_jpeg = &data[offset..offset + size];
+                if let Ok(gm_parser) = JpegParser::parse(gain_map_jpeg) {
+                    if let Some((gm_width, gm_height)) = gm_parser.get_dimensions() {
+                        return Some((gm_width, gm_height));
+                    }
+                }
+            }
+        }
+    }
+
+    // Method 2: Look for second JPEG after primary image EOI
+    if let Ok(eoi_offset) = find_primary_eoi_offset(data) {
+        let remaining = &data[eoi_offset + 2..];
+
+        if remaining.len() >= 2 && remaining[0] == 0xFF && remaining[1] == 0xD8 {
+            // Found another JPEG - try to get its dimensions
+            if let Ok(gm_parser) = JpegParser::parse(remaining) {
+                if let Some((gm_width, gm_height)) = gm_parser.get_dimensions() {
+                    return Some((gm_width, gm_height));
+                }
+            }
+        }
+    }
+
+    None
+}
 
 /// Checks if a JPEG contains UltraHDR/gain map metadata.
 pub fn has_gainmap_metadata(data: &[u8]) -> bool {
@@ -329,5 +428,56 @@ mod tests {
     fn test_parse_mpf_invalid() {
         assert!(parse_mpf_for_gainmap(&[]).is_none());
         assert!(parse_mpf_for_gainmap(b"NOTMPF").is_none());
+    }
+
+    #[test]
+    fn test_probe_empty_buffer() {
+        let result = probe(&[]);
+        assert!(!result.is_valid);
+        assert!(!result.has_primary_image);
+        assert!(!result.has_gain_map);
+        assert!(!result.has_metadata);
+        assert_eq!(result.width, 0);
+        assert_eq!(result.height, 0);
+    }
+
+    #[test]
+    fn test_probe_non_jpeg() {
+        // PNG magic bytes
+        let png = [0x89, 0x50, 0x4E, 0x47];
+        let result = probe(&png);
+        assert!(!result.is_valid);
+        assert!(!result.has_primary_image);
+    }
+
+    #[test]
+    fn test_probe_minimal_jpeg() {
+        // Minimal valid JPEG (SOI + EOI)
+        let minimal_jpeg = vec![0xFF, 0xD8, 0xFF, 0xD9];
+        let result = probe(&minimal_jpeg);
+
+        assert!(!result.is_valid); // Not UltraHDR
+        assert!(result.has_primary_image); // But is a JPEG
+        assert!(!result.has_gain_map);
+        assert!(!result.has_metadata);
+    }
+
+    #[test]
+    fn test_probe_never_panics() {
+        // Various edge cases that should never panic
+        let test_cases: Vec<&[u8]> = vec![
+            &[],
+            &[0xFF],
+            &[0xFF, 0xD8],
+            &[0xFF, 0xD8, 0xFF],
+            &[0x00, 0x00, 0x00, 0x00],
+            &[0xFF, 0xD8, 0xFF, 0xD9], // Minimal JPEG
+        ];
+
+        for data in test_cases {
+            let result = probe(data);
+            // Should return a valid result struct, not panic
+            assert!(result.width == 0 || result.width > 0); // Always defined
+        }
     }
 }

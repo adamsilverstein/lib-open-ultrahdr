@@ -39,6 +39,44 @@ export interface GainMapMetadata {
 }
 
 /**
+ * Result of probing an image to check if it's UltraHDR.
+ *
+ * Provides detailed information about what components were found
+ * without fully decoding the image. Useful for batch processing and filtering.
+ */
+export interface UltraHdrProbeResult {
+	/** Whether the image is a valid UltraHDR image (has all required components) */
+	isValid: boolean;
+
+	/** Whether a primary JPEG image was found */
+	hasPrimaryImage: boolean;
+
+	/** Whether a gain map image was found */
+	hasGainMap: boolean;
+
+	/** Whether gain map metadata (XMP) was found */
+	hasMetadata: boolean;
+
+	/** Primary image width in pixels (0 if not found) */
+	width: number;
+
+	/** Primary image height in pixels (0 if not found) */
+	height: number;
+
+	/** Gain map width in pixels (0 if not found) */
+	gainMapWidth: number;
+
+	/** Gain map height in pixels (0 if not found) */
+	gainMapHeight: number;
+
+	/** HDR capacity (max additional stops of dynamic range), 0 if not found */
+	hdrCapacity: number;
+
+	/** Metadata version string (empty if not found) */
+	metadataVersion: string;
+}
+
+/**
  * Result of decoding an UltraHDR image.
  */
 export interface UltraHdrDecodeResult {

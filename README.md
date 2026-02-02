@@ -202,7 +202,7 @@ Create a GitHub release with a version tag (e.g., `v0.1.2`). The workflow will a
 ### Required Setup (Maintainers)
 
 Add an `NPM_TOKEN` secret to the repository:
-1. Create an npm automation token at https://www.npmjs.com/settings/tokens
+1. [Create an npm automation token](https://www.npmjs.com/settings/tokens)
 2. Go to repository **Settings** > **Secrets and variables** > **Actions**
 3. Add a new secret named `NPM_TOKEN` with the token value
 

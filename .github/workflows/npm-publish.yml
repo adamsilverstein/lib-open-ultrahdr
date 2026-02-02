@@ -39,7 +39,9 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack@0.13.1
 
       - name: Cache Cargo
         uses: actions/cache@v4
@@ -61,7 +63,9 @@ jobs:
         run: npm run build:js
 
       - name: Run tests
-        run: npm run test:js
+        run: |
+          npm run test:js
+          npm run test:wasm
 
       - name: Publish WASM package
         run: |

@@ -206,7 +206,13 @@ This project uses [npm trusted publishing](https://docs.npmjs.com/generating-pro
 1. Configure trusted publishing for both packages on npm:
    - Visit the package settings on npm for `open-ultrahdr-wasm` and `open-ultrahdr`
    - Set up GitHub Actions as a trusted publisher
-   - Configure the workflow: `npm-publish.yml` from branch `main`
+   - Configure the workflow: `npm-publish.yml`
+
+2. Ensure the GitHub Actions workflow has the required OIDC permissions:
+   - `permissions: id-token: write` - Required to request the GitHub OIDC JWT
+   - `permissions: contents: read` - Required to access repository contents
+
+3. npm CLI v11.5.1 or higher is required for trusted publishing to work.
 
 No secrets need to be added to the repository. Authentication is handled automatically via GitHub's OIDC token.
 

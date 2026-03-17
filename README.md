@@ -201,10 +201,20 @@ Create a GitHub release with a version tag (e.g., `v0.1.2`). The workflow will a
 
 ### Required Setup (Maintainers)
 
-Add an `NPM_TOKEN` secret to the repository:
-1. [Create an npm automation token](https://www.npmjs.com/settings/tokens)
-2. Go to repository **Settings** > **Secrets and variables** > **Actions**
-3. Add a new secret named `NPM_TOKEN` with the token value
+This project uses [npm trusted publishing](https://docs.npmjs.com/generating-provenance-statements) with OIDC, which eliminates the need for long-lived npm tokens:
+
+1. Configure trusted publishing for both packages on npm:
+   - Visit the package settings on npm for `open-ultrahdr-wasm` and `open-ultrahdr`
+   - Set up GitHub Actions as a trusted publisher
+   - Configure the workflow: `npm-publish.yml`
+
+2. Ensure the GitHub Actions workflow has the required OIDC permissions:
+   - `permissions: id-token: write` - Required to request the GitHub OIDC JWT
+   - `permissions: contents: read` - Required to access repository contents
+
+3. npm CLI v11.5.1 or higher is required for trusted publishing to work.
+
+No secrets need to be added to the repository. Authentication is handled automatically via GitHub's OIDC token.
 
 ## Contributing
 

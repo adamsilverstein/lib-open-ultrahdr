@@ -22,6 +22,9 @@ jobs:
   publish:
     name: Publish Packages
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write  # Required for npm trusted publishing (OIDC)
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,8 +79,6 @@ jobs:
           else
             npm publish
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish JS package
         run: |
@@ -88,5 +89,3 @@ jobs:
           else
             npm publish
           fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

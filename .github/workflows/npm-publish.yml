@@ -62,6 +62,9 @@ jobs:
       - name: Build WASM package (release)
         run: npm run build:wasm:release
 
+      - name: Remove wasm-pack gitignore from pkg
+        run: rm -f wasm/pkg/.gitignore
+
       - name: Build JS package
         run: npm run build:js
 

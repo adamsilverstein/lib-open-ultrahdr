@@ -61,9 +61,9 @@ describe('probeUltraHdr', () => {
 		const jpegBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
 		const result = await probeUltraHdr(jpegBuffer);
 
-		// The test JPEG is 2x2 pixels
-		expect(result.width).toBe(2);
-		expect(result.height).toBe(2);
+		// The test JPEG is 16x16 pixels
+		expect(result.width).toBe(16);
+		expect(result.height).toBe(16);
 	});
 
 	it('never throws, always returns a result', async () => {

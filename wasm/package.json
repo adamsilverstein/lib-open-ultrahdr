@@ -1,16 +1,17 @@
 {
 	"name": "open-ultrahdr-wasm",
-	"version": "0.1.2",
-	"description": "UltraHDR (ISO 21496-1) gain map WASM implementation",
+	"version": "0.2.0",
+	"description": "UltraHDR (ISO 21496-1) gain map WASM implementation, built from upstream libultrahdr via Emscripten/embind",
 	"author": "Adam Silverstein",
-	"license": "GPL-2.0-or-later",
+	"license": "Apache-2.0 OR MIT",
 	"keywords": [
 		"ultrahdr",
 		"hdr",
 		"gain-map",
 		"iso-21496",
 		"wasm",
-		"webassembly"
+		"webassembly",
+		"libultrahdr"
 	],
 	"homepage": "https://github.com/adamsilverstein/lib-open-ultrahdr",
 	"repository": {
@@ -41,9 +42,10 @@
 		"./package.json": "./package.json"
 	},
 	"scripts": {
-		"build": "wasm-pack build --target web --out-dir pkg",
-		"build:release": "wasm-pack build --target web --out-dir pkg --release",
-		"test": "cargo test"
+		"build": "rm -rf build && emcmake cmake -S . -B build -DCMAKE_BUILD_TYPE=Release && cmake --build build -j && cp build/open_ultrahdr.js build/open_ultrahdr.wasm pkg/",
+		"build:release": "npm run build",
+		"clean": "rm -rf build pkg/open_ultrahdr.js pkg/open_ultrahdr.wasm",
+		"test": "echo 'WASM tests run via the JS package (cd ../js && npm test)'"
 	},
 	"publishConfig": {
 		"access": "public"

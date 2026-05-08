@@ -13,7 +13,7 @@ import {
 describe('encodeUltraHdr', () => {
 	it('produces valid JPEG output', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr(
 			'encode-1',
@@ -43,7 +43,7 @@ describe('encodeUltraHdr', () => {
 
 	it('throws error for empty SDR buffer', async () => {
 		const emptyBuffer = new ArrayBuffer(0);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		await expect(
 			encodeUltraHdr('encode-empty', emptyBuffer, hdrData.buffer, defaultEncodeOptions)
@@ -52,7 +52,7 @@ describe('encodeUltraHdr', () => {
 
 	it('throws error for mismatched HDR buffer size', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		// Wrong size - should be 2*2*3 = 12 floats for a 2x2 image
+		// Wrong size - should be 16*16*3 = 768 floats for a 16x16 image
 		const wrongSizeHdr = new Float32Array(100);
 
 		await expect(
@@ -71,7 +71,7 @@ describe('encodeUltraHdr', () => {
 
 	it('handles various quality settings', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		// Low quality
 		const lowQ = await encodeUltraHdr('q-low', sdrBuffer, hdrData.buffer, {
@@ -92,7 +92,7 @@ describe('encodeUltraHdr', () => {
 
 	it('handles different HDR capacity targets', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		// Low HDR capacity
 		const lowCap = await encodeUltraHdr('cap-low', sdrBuffer, hdrData.buffer, {

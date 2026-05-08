@@ -28,4 +28,6 @@ if (await isUltraHdr(buffer)) {
 
 ## License
 
-GPL-2.0-or-later
+Dual-licensed under `Apache-2.0 OR MIT`, matching upstream
+[libultrahdr](https://github.com/google/libultrahdr).
+See the project root [LICENSE](../LICENSE) for details.

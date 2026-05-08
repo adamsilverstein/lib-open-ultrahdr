@@ -1,10 +1,10 @@
 {
 	"name": "lib-open-ultrahdr",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"private": true,
-	"description": "UltraHDR (ISO 21496-1) gain map implementation - monorepo",
+	"description": "UltraHDR (ISO 21496-1) gain map implementation, backed by upstream libultrahdr — monorepo",
 	"author": "Adam Silverstein",
-	"license": "GPL-2.0-or-later",
+	"license": "Apache-2.0 OR MIT",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/adamsilverstein/lib-open-ultrahdr.git"
@@ -18,14 +18,11 @@
 		"build:wasm:release": "cd wasm && npm run build:release",
 		"build:js": "cd js && npm run build",
 		"build": "npm run build:wasm && npm run build:js",
-		"test:wasm": "cd wasm && cargo test",
 		"test:js": "cd js && npm run test",
-		"test": "npm run test:wasm && npm run test:js",
-		"lint": "npm run lint:rust && npm run lint:js",
-		"lint:rust": "cd wasm && cargo fmt --check && cargo clippy -- -D warnings",
+		"test": "npm run test:js",
+		"lint": "npm run lint:js",
 		"lint:js": "cd js && npm run lint",
-		"format": "npm run format:rust && npm run format:js",
-		"format:rust": "cd wasm && cargo fmt",
+		"format": "npm run format:js",
 		"format:js": "prettier --write \"js/**/*.{ts,js,json,mjs}\"",
 		"format:check": "prettier --check \"js/**/*.{ts,js,json,mjs}\"",
 		"typecheck": "cd js && npm run typecheck"

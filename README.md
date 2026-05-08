@@ -1,6 +1,8 @@
 # Open UltraHDR
 
-A GPLv2-compatible implementation of UltraHDR (ISO 21496-1) gain map specification for JavaScript/TypeScript applications.
+JavaScript/TypeScript bindings for the UltraHDR (ISO 21496-1) gain map specification, backed by upstream [`google/libultrahdr`](https://github.com/google/libultrahdr) compiled to WebAssembly via Emscripten/embind.
+
+Dual-licensed under `Apache-2.0 OR MIT`, matching upstream libultrahdr.
 
 ## Features
 
@@ -141,21 +143,24 @@ interface UltraHdrEncodeOptions {
 
 ### Prerequisites
 
-- Rust toolchain (1.70+)
-- wasm-pack
+- [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html) (`emcc`, `emcmake`)
+- CMake (3.20+)
 - Node.js (18+)
 
 ### Build
 
 ```bash
-# Clone the repository
-git clone https://github.com/adamsilverstein/lib-open-ultrahdr.git
+# Clone the repository (with submodules — libultrahdr is vendored as one)
+git clone --recurse-submodules https://github.com/adamsilverstein/lib-open-ultrahdr.git
 cd lib-open-ultrahdr
+
+# Activate emsdk in the current shell
+source /path/to/emsdk/emsdk_env.sh
 
 # Install dependencies
 npm install
 
-# Build WASM module
+# Build WASM module (emcmake + cmake + emcc)
 npm run build:wasm
 
 # Build TypeScript wrapper
@@ -165,14 +170,19 @@ npm run build:js
 ### Test
 
 ```bash
-npm run test:wasm
+npm test
 ```
 
 ## License
 
-GPL-2.0-or-later
+Dual-licensed under `Apache-2.0 OR MIT`. See [LICENSE](LICENSE) for the
+preamble plus [LICENSE-APACHE](LICENSE-APACHE) and [LICENSE-MIT](LICENSE-MIT)
+for the full texts.
 
-All Rust dependencies are MIT/Apache-2.0 licensed, ensuring GPL-2.0 compatibility.
+This matches the licensing of upstream
+[libultrahdr](https://github.com/google/libultrahdr), which is bundled as a
+git submodule under `wasm/third_party/libultrahdr/` and statically linked
+into the WASM build.
 
 ## Releasing
 

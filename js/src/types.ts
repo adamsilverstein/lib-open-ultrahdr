@@ -115,10 +115,24 @@ export interface UltraHdrEncodeOptions {
 	/** Target HDR capacity (typically 2.0-4.0) */
 	targetHdrCapacity: number;
 
-	/** Whether to include ISO 21496-1 metadata */
+	/**
+	 * Whether to include ISO 21496-1 metadata.
+	 *
+	 * Currently a no-op: libultrahdr's encoder unconditionally emits ISO
+	 * 21496-1 metadata and exposes no public toggle. Kept for API stability
+	 * with prior versions; setting this to `false` will not suppress the
+	 * metadata block.
+	 */
 	includeIsoMetadata: boolean;
 
-	/** Whether to include UltraHDR v1 metadata for Android compatibility */
+	/**
+	 * Whether to include UltraHDR v1 metadata for Android compatibility.
+	 *
+	 * Currently a no-op: libultrahdr's encoder unconditionally emits the v1
+	 * metadata block and exposes no public toggle. Kept for API stability
+	 * with prior versions; setting this to `false` will not suppress the
+	 * metadata block.
+	 */
 	includeUltrahdrV1: boolean;
 
 	/** Downscale factor for the gain map (1 = same size, 2 = half, 4 = quarter) */

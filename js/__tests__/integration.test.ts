@@ -21,8 +21,8 @@ import {
 describe('encode-decode roundtrip', () => {
 	it('encodes an UltraHDR image that can be detected', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		// The test JPEG is 2x2 pixels
-		const hdrData = createSyntheticHdrData(2, 2);
+		// The test JPEG is 16x16 pixels
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr('test-1', sdrBuffer, hdrData.buffer, {
 			...defaultEncodeOptions,
@@ -39,7 +39,7 @@ describe('encode-decode roundtrip', () => {
 
 	it('decodes an encoded UltraHDR image', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr('test-2', sdrBuffer, hdrData.buffer, defaultEncodeOptions);
 		const decoded = await decodeUltraHdr('test-2-decode', encoded);
@@ -62,13 +62,13 @@ describe('encode-decode roundtrip', () => {
 		expect(decoded.gainMap.length).toBeGreaterThan(0);
 
 		// Verify dimensions
-		expect(decoded.width).toBe(2);
-		expect(decoded.height).toBe(2);
+		expect(decoded.width).toBe(16);
+		expect(decoded.height).toBe(16);
 	});
 
 	it('preserves metadata through encode-decode', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const targetCapacity = 3.5;
 		const encoded = await encodeUltraHdr('test-3', sdrBuffer, hdrData.buffer, {
@@ -93,7 +93,7 @@ describe('encode-decode roundtrip', () => {
 
 	it('extracts SDR base from encoded UltraHDR', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr('test-4', sdrBuffer, hdrData.buffer, defaultEncodeOptions);
 		const extractedSdr = await extractSdrBase(encoded);
@@ -114,7 +114,7 @@ describe('encode-decode roundtrip', () => {
 
 	it('retrieves metadata from encoded UltraHDR', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr('test-5', sdrBuffer, hdrData.buffer, {
 			...defaultEncodeOptions,
@@ -132,7 +132,7 @@ describe('encode-decode roundtrip', () => {
 describe('encoding options', () => {
 	it('respects quality settings', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const lowQuality = await encodeUltraHdr('quality-low', sdrBuffer, hdrData.buffer, {
 			...defaultEncodeOptions,
@@ -153,7 +153,7 @@ describe('encoding options', () => {
 
 	it('includes ISO metadata by default', async () => {
 		const sdrBuffer = base64ToArrayBuffer(REGULAR_JPEG_BASE64);
-		const hdrData = createSyntheticHdrData(2, 2);
+		const hdrData = createSyntheticHdrData(16, 16);
 
 		const encoded = await encodeUltraHdr('iso-test', sdrBuffer, hdrData.buffer, {
 			...defaultEncodeOptions,

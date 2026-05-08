@@ -2,13 +2,10 @@
 node_modules/
 
 # Build outputs
-wasm/pkg/
-wasm/target/
+wasm/build/
+wasm/pkg/open_ultrahdr.js
+wasm/pkg/open_ultrahdr.wasm
 js/dist/
-
-# Rust
-Cargo.lock
-*.rs.bk
 
 # IDE
 .idea/

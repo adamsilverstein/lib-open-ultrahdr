@@ -15,8 +15,8 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  CARGO_TERM_COLOR: always
   NODE_VERSION: '20'
+  EMSDK_VERSION: '4.0.7'
 
 jobs:
   publish:
@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,25 +41,11 @@ jobs:
       - name: Upgrade npm for trusted publishing
         run: npm install -g npm@latest
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+      - name: Set up Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
         with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        uses: taiki-e/install-action@v2
-        with:
-          tool: wasm-pack@0.13.1
-
-      - name: Cache Cargo
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            wasm/target
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('wasm/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-wasm-
+          version: ${{ env.EMSDK_VERSION }}
+          actions-cache-folder: emsdk-cache
 
       - name: Install dependencies
         run: npm ci
@@ -65,16 +53,11 @@ jobs:
       - name: Build WASM package (release)
         run: npm run build:wasm:release
 
-      - name: Remove wasm-pack gitignore from pkg
-        run: rm -f wasm/pkg/.gitignore
-
       - name: Build JS package
         run: npm run build:js
 
       - name: Run tests
-        run: |
-          npm run test:js
-          npm run test:wasm
+        run: npm run test:js
 
       - name: Publish WASM package
         run: |

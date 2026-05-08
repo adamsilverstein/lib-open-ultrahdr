@@ -55,6 +55,10 @@ let location = '';
 let explicitWasmUrl: string | null = null;
 let wasmInstance: OpenUltraHdrModule | null = null;
 let initPromise: Promise<OpenUltraHdrModule> | null = null;
+// Bumped by resetCache() so that any in-flight getWasm() call started under a
+// previous configuration cannot publish a stale instance after setLocation/
+// setWasmUrl is called.
+let initGeneration = 0;
 
 /**
  * Sets the location/public path for loading WASM files.
@@ -83,6 +87,7 @@ export function setWasmUrl(url: string): void {
 }
 
 function resetCache(): void {
+	initGeneration += 1;
 	wasmInstance = null;
 	initPromise = null;
 }
@@ -96,6 +101,7 @@ async function getWasm(): Promise<OpenUltraHdrModule> {
 	if (wasmInstance) return wasmInstance;
 	if (initPromise) return initPromise;
 
+	const generation = initGeneration;
 	initPromise = (async () => {
 		try {
 			const wasmModule = await import('open-ultrahdr-wasm');
@@ -122,10 +128,19 @@ async function getWasm(): Promise<OpenUltraHdrModule> {
 			}
 
 			const instance = (await factory(moduleOptions)) as unknown as OpenUltraHdrModule;
+			// If the configuration changed while we were initializing, drop this
+			// instance and fall back to a fresh init under the new config.
+			if (generation !== initGeneration) {
+				return getWasm();
+			}
 			wasmInstance = instance;
 			return instance;
 		} catch (err) {
-			initPromise = null;
+			// Only clear the in-flight promise if it still belongs to this generation;
+			// otherwise resetCache() has already moved on.
+			if (generation === initGeneration) {
+				initPromise = null;
+			}
 			throw err;
 		}
 	})();
@@ -147,8 +162,8 @@ export async function isUltraHdr(buffer: ArrayBuffer): Promise<boolean> {
  * Never throws — invalid inputs return a result with all flags set to false.
  */
 export async function probeUltraHdr(buffer: ArrayBuffer): Promise<UltraHdrProbeResult> {
-	const wasm = await getWasm();
 	try {
+		const wasm = await getWasm();
 		return wasm.probeUltraHdr(new Uint8Array(buffer));
 	} catch {
 		return {

@@ -58,6 +58,11 @@ struct UltraHdrEncodeOptions {
   int baseQuality = kDefaultBaseQuality;
   int gainMapQuality = kDefaultGainMapQuality;
   float targetHdrCapacity = kDefaultTargetHdrCapacity;
+  // includeIsoMetadata and includeUltrahdrV1 are accepted for API stability
+  // with the prior Rust crate but are currently no-ops: libultrahdr's encoder
+  // unconditionally emits both ISO 21496-1 and UltraHDR v1 metadata and exposes
+  // no public toggles. Setting these to `false` will not suppress either
+  // metadata block. Track libultrahdr upstream for future granular controls.
   bool includeIsoMetadata = true;
   bool includeUltrahdrV1 = true;
   int gainMapScale = 1;

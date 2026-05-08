@@ -1,0 +1,15 @@
+open-ultrahdr is dual-licensed under your choice of:
+
+* Apache License, Version 2.0  (see LICENSE-APACHE)
+* MIT License                  (see LICENSE-MIT)
+
+This matches the licensing of upstream `libultrahdr`
+(https://github.com/google/libultrahdr) which is bundled as a git submodule
+under `wasm/third_party/libultrahdr/` and statically linked into the WASM
+build. libultrahdr ships its own LICENSE-APACHE and LICENSE-MIT files.
+
+The Emscripten/embind glue code added by this project (everything under
+`wasm/src/`, `js/src/`, and the build configuration) is © Adam Silverstein
+and the open-ultrahdr contributors.
+
+SPDX-License-Identifier: Apache-2.0 OR MIT
